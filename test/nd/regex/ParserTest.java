@@ -102,9 +102,4 @@ public class ParserTest extends TestCase {
         assertEquals(new Token(Type.CHARACTER, "z"), interval2.highBound().token());
     }
 
-    public void test_print2() {
-        Parser parser = new ParserImpl(new LexerImpl("abc[a-z]*o?k+g{12,15}"));
-        AST ast = parser.parse();
-        ast.visit(new PrintVisitor2());
-    }
 }
