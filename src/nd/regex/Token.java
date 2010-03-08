@@ -25,6 +25,14 @@ class Token {
         return type.equals(otherToken.type) && text.equals(otherToken.text);
     }
 
+    @Override
+    public int hashCode() {
+        int result = 17;
+        result = 31 * result + type.hashCode();
+        result = 31 * result + text.hashCode();
+        return result;
+    }
+
 
     @Override
     public String toString() {

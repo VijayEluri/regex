@@ -23,12 +23,13 @@ class ParserImpl implements Parser {
     @Override
     public AST parse() {
         init();
-        AST root = new AST(new Token(Type.SEQUENCE, ""));
+        AST root = new SequenceNode(new Token(Type.SEQUENCE, ""));
         while (current.type() != Type.EOF) {
             switch (current.type()) {
                 case ZERO_OR_ONE:
                 case ZERO_OR_MORE:
-                case ONE_OR_MORE: {
+                case ONE_OR_MORE:
+                case LEFT_CURLY_BRACKET: {
                     parseQuantifier(root);
                     break;
                 }
@@ -58,23 +59,88 @@ class ParserImpl implements Parser {
     }
 
     private void parseCharacter(AST currentRoot) {
-        currentRoot.addChild(new AST(current));
-        match(current.type());
+        currentRoot.addChild(new CharacterNode(current));
+        match(Type.CHARACTER);
     }
 
     private void parseQuantifier(AST currentRoot) {
         if (currentRoot.children().isEmpty()) {
             throw new RuntimeException("Unexpected token " + current);
         }
-        AST last = currentRoot.removeLastChild();
-        AST quantifier = new AST(current);
-        quantifier.addChild(last);
+        AST term = currentRoot.removeLastChild();
+        AST quantifier = null;
+        if (isPredefinedQuantifier(current.type())) {
+            quantifier = parsePredefinedQuantifier(term);
+        } else if (isUserDefinedQuantifier(current.type())) {
+            quantifier = parseUserDefinedQuantifier(term);
+        } else {
+            throw new Error("Unexpected token " + current);
+        }
         currentRoot.addChild(quantifier);
-        match(current.type());
+    }
+
+    private boolean isPredefinedQuantifier(Type t) {
+        return t == Type.ZERO_OR_ONE || t == Type.ZERO_OR_MORE || t == Type.ONE_OR_MORE;
+    }
+
+    private QuantifierNode parsePredefinedQuantifier(AST term) {
+        QuantifierNode quantifier = null;
+        if (current.type() == Type.ZERO_OR_MORE) {
+            quantifier = new UnboundedQuantifierNode(term, current, 0);
+            match(Type.ZERO_OR_MORE);
+        } else if (current.type() == Type.ONE_OR_MORE) {
+            quantifier = new UnboundedQuantifierNode(term, current, 1);
+            match(Type.ONE_OR_MORE);
+        } else if (current.type() == Type.ZERO_OR_ONE) {
+            quantifier = new BoundedQuantifierNode(term, current, 0, 1);
+            match(Type.ZERO_OR_ONE);
+        } else {
+            throw new Error("Unexpected token " + current);
+        }
+        return quantifier;
+    }
+
+    private boolean isUserDefinedQuantifier(Type t) {
+        return t == Type.LEFT_CURLY_BRACKET;
+    }
+
+    private QuantifierNode parseUserDefinedQuantifier(AST term) {
+        QuantifierNode quantifier = null;
+        Token quantifierToken = current;
+        match(Type.LEFT_CURLY_BRACKET);
+        StringBuilder low = new StringBuilder();
+        StringBuilder high = new StringBuilder();
+        StringBuilder tmp = low;
+        boolean oneBound = true;
+        while (current.type() != Type.RIGHT_CURLY_BRACKET) {
+            if (!Character.isDigit(current.text().charAt(0)) && !current.text().equals(","))
+                throw new Error("Unexpected token " + current);
+            if (current.text().equals(",")) {
+                tmp = high;
+                oneBound = false;
+                match(Type.CHARACTER);
+            } else {
+                tmp.append(current.text());
+                match(Type.CHARACTER);
+            }
+        }
+        if (oneBound) {
+            quantifier = new BoundedQuantifierNode(term, quantifierToken,
+                    Integer.valueOf(low.toString()), Integer.valueOf(low.toString()));
+        } else {
+            if (high.length() > 0) {
+                quantifier = new BoundedQuantifierNode(term, quantifierToken,
+                        Integer.valueOf(low.toString()), Integer.valueOf(high.toString()));
+            } else {
+                quantifier = new UnboundedQuantifierNode(term, quantifierToken, Integer.valueOf(low.toString()));
+            }
+        }
+        match(Type.RIGHT_CURLY_BRACKET);
+        return quantifier;
     }
 
     private void parseCharacterClass(AST currentRoot) {
-        AST charClass = new AST(current);
+        AST charClass = new CharacterClassNode(current);
         match(current.type());
         while (current.type() != Type.RIGHT_BRACKET) {
             switch (current.type()) {
@@ -86,8 +152,7 @@ class ParserImpl implements Parser {
                     }
                     break;
                 }
-                case EOF:
-                    throw new Error("Unexpected token " + current);
+                case EOF: throw new Error("Unexpected token " + current);
             }
         }
         match(Type.RIGHT_BRACKET);
@@ -95,17 +160,15 @@ class ParserImpl implements Parser {
     }
 
     private void parseCharacterClassInterval(AST currentRoot) {
-        AST intervalStart = new AST(current);
+        CharacterNode lowBound = new CharacterNode(current);
         match(Type.CHARACTER);
-        AST interval = new AST(new Token(Type.INTERVAL, "-"));
         match(Type.CHARACTER);
         if (current.type() == Type.RIGHT_BRACKET || current.type() == Type.EOF) {
             throw new Error("Unexpected token " + current);
         } else {
-            AST intervalEnd = new AST(current);
+            CharacterNode highBound = new CharacterNode(current);
             match(Type.CHARACTER);
-            interval.addChild(intervalStart);
-            interval.addChild(intervalEnd);
+            CharacterClassIntervalNode interval = new CharacterClassIntervalNode(lowBound, highBound);
             currentRoot.addChild(interval);
         }
     }

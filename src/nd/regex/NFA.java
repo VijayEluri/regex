@@ -75,15 +75,17 @@ class NFA {
     }
 
     static class CharacterIntervalState extends State {
-        private final Character c;
+        private final char lowBound;
+        private final char highBound;
         private State output;
 
-        CharacterIntervalState(Character c) {
-            this.c = c;
+        CharacterIntervalState(char lowBound, char highBound) {
+            this.lowBound = lowBound;
+            this.highBound = highBound;
         }
 
         @Override
-        List<State> step(Character c) {            
+        List<State> step(Character c) {
             if (output != null) {
                 return match(c) ? Collections.singletonList(output) : Collections.<State>emptyList();
             } else {
@@ -93,7 +95,7 @@ class NFA {
 
         @Override
         boolean match(Character c) {
-            return this.c.equals(c);
+            return c >= lowBound && c <= highBound;
         }
 
         @Override
@@ -107,13 +109,14 @@ class NFA {
 
         @Override
         public String toString() {
-            return "(s" + id +")-" + c.toString() + "->" + (output != null ? output.toString() : "");
+            return "(s" + id +")-" + "(" + Character.toString(lowBound) + "-" + Character.toString(highBound) + ")" + "->"
+                    + (output != null ? output.toString() : "");
         }
     }
 
     static class OrState extends State {
-        private State s1;
-        private State s2;
+        private final State s1;
+        private final State s2;
 
         OrState(State s1, State s2) {
             this.s1 = s1;
@@ -153,47 +156,6 @@ class NFA {
         void setFinal(boolean aFinal) {
             s1.setFinal(aFinal);
             s2.setFinal(aFinal);
-        }
-    }
-
-    static class AndState extends State {
-        private State s1;
-        private State s2;
-
-        AndState(State s1, State s2) {
-            this.s1 = s1;
-            this.s2 = s2;
-            s1.patch(s2);
-        }
-
-        @Override
-        List<State> step(Character c) {
-            return s1.step(c);
-        }
-
-        @Override
-        boolean match(Character c) {
-            return s1.match(c);
-        }
-
-        @Override
-        void patch(State s) {
-            s2.patch(s);
-        }
-
-        @Override
-        public String toString() {
-            return String.format("(s%d)-(AND %s %s)", id, s1, s2);
-        }
-
-        @Override
-        boolean isFinal() {
-            return s1.isFinal();
-        }
-
-        @Override
-        void setFinal(boolean aFinal) {
-            s1.setFinal(aFinal);
         }
     }
 

@@ -7,84 +7,94 @@ import static nd.regex.NFA.*;
 /**
  *
  */
-class NFABuilder implements ASTVisitor<State> {
-
-    private State result = null;
+class NFABuilder implements ASTNodeVisitor<State> {
 
     @Override
-    public State visit(AST ast) {
-        switch(ast.token().type()) {
-            case SEQUENCE:
-                return buildSequence(ast);
-            case LEFT_BRACKET:
-            case LEFT_BRACKET_CARET:
-                buildCharacterClass(ast);
-                break;
-            case ZERO_OR_ONE:
-            case ZERO_OR_MORE:
-            case ONE_OR_MORE:
-                return buildQuantifier(ast);
-            case CHARACTER:
-                return buildCharacter(ast);
-            case INTERVAL:
-                buildInterval(ast);
-                break;
-            default:
-                throw new Error("Unexpected node type " + ast);
-        }
-        return result;
-    }
-
-    private void buildInterval(AST interval) {
-        State s = interval.children().get(0).visit(this);
-        System.out.print("-");
-        interval.children().get(1).visit(this);
-    }
-
-    private State buildSequence(AST sequence) {
-        State result = null;
+    public State visit(SequenceNode sequence) {
+        State first = null;
         for (Iterator<AST> iter = sequence.children().iterator(); iter.hasNext();) {
             State childState = iter.next().visit(this);
-            if (result != null) {
-                result = new AndState(result, childState);;
+            if (first != null) {
+                first.patch(childState);
             } else {
-                result = childState;
+                first = childState;
             }
             if (!iter.hasNext()) {
-                State f = new EmptyState();f.setFinal(true);
+                State f = new EmptyState();
+                f.setFinal(true);
                 childState.patch(f);
             }
         }
-        return result;
+        return first;
     }
 
-    private void buildCharacterClass(AST charClass) {
-        System.out.print(charClass.token().text());
-        for (AST child : charClass.children()) {
-            child.visit(this);
+    @Override
+    public State visit(BoundedQuantifierNode quantifier) {
+        State first = null;
+        for (int i = 0; i < quantifier.lowBound(); i++) {
+            State s = quantifier.term().visit(this);
+            if (first == null) {
+                first = s;
+            } else {
+                first.patch(s);
+            }
         }
-        System.out.print("]");
+        for (int i = quantifier.lowBound(); i < quantifier.highBound(); i++) {
+            if (first == null) {
+                first = new OrState(quantifier.term().visit(this), new EmptyState());
+            } else {
+                first.patch(new OrState(quantifier.term().visit(this), new EmptyState()));
+            }
+        }
+        return first;
     }
 
-    private State buildQuantifier(AST quantifier) {
-        if (quantifier.token().text().equals("?")) {
-            return new OrState(quantifier.children().get(0).visit(this), new EmptyState());
-        } else if (quantifier.token().text().equals("+")) {
-            State child = quantifier.children().get(0).visit(this);
-            State or = new OrState(new Unpatchable(child), new EmptyState());
-            child.patch(or);
-            return child;
-        } else if (quantifier.token().text().equals("*")) {
-            State child = quantifier.children().get(0).visit(this);
-            child.patch(new Unpatchable(child));
-            return new OrState(child, new EmptyState());
+    @Override
+    public State visit(UnboundedQuantifierNode quantifier) {
+        State first = null;
+        for (int i = 0; i < quantifier.lowBound(); i++) {
+            State s = quantifier.term().visit(this);
+            if (first == null) {
+                first = s;
+            } else {
+                first.patch(s);
+            }
+        }
+        if (first == null) {
+            first = quantifier.term().visit(this);
+            first.patch(new Unpatchable(first));
+            first = new OrState(first, new EmptyState());
         } else {
-            throw new Error("Unknown quantifier");
+            State or = new OrState(new Unpatchable(first), new EmptyState());
+            first.patch(or);
         }
+        return first;
     }
 
-    private State buildCharacter(AST character) {
+    @Override
+    public State visit(CharacterClassNode charClass) {
+        State charClassState = null;
+        for (AST child : charClass.children()) {
+            if (charClassState == null) {
+                charClassState = child.visit(this);
+            } else {
+                charClassState = new OrState(charClassState, child.visit(this));
+            }
+        }
+        if (charClassState == null) {
+            charClassState = new EmptyState();
+        }
+        return charClassState;
+    }
+
+    @Override
+    public State visit(CharacterClassIntervalNode interval) {
+        return new CharacterIntervalState(interval.lowBound().token().text().charAt(0),
+                interval.highBound().token().text().charAt(0));
+    }
+
+    @Override
+    public State visit(CharacterNode character) {
         return new CharacterState(character.token().text().charAt(0));
     }
-
 }

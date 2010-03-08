@@ -31,7 +31,6 @@ public class PrintVisitor implements ASTVisitor<Void> {
         return null;
     }
 
-
     private void printInterval(AST interval) {
         interval.children().get(0).visit(this);
         System.out.print("-");
