@@ -1,10 +1,6 @@
 package nd.regex;
 
 import junit.framework.TestCase;
-
-import java.util.ArrayList;
-import java.util.List;
-
 import static nd.regex.Token.Type;
 
 /**
@@ -13,7 +9,7 @@ import static nd.regex.Token.Type;
 public class LexerTest extends TestCase {
 
     public void test_special() {
-        Lexer lexer = new LexerImpl("[]{}()|");
+        Lexer lexer = new LexerImpl("[]{}()|[^");
         assertEquals(new Token(Type.LEFT_BRACKET, "["), lexer.nextToken());
         assertEquals(new Token(Type.RIGHT_BRACKET, "]"), lexer.nextToken());
         assertEquals(new Token(Type.LEFT_CURLY_BRACKET, "{"), lexer.nextToken());
@@ -21,6 +17,8 @@ public class LexerTest extends TestCase {
         assertEquals(new Token(Type.LEFT_PAREN, "("), lexer.nextToken());
         assertEquals(new Token(Type.RIGHT_PAREN, ")"), lexer.nextToken());
         assertEquals(new Token(Type.OR, "|"), lexer.nextToken());
+        assertEquals(new Token(Type.LEFT_BRACKET_CARET, "[^"), lexer.nextToken());
+        assertEquals(new Token(Type.EOF, "EOF"), lexer.nextToken());
     }
 
     public void test_usual_characters() {
@@ -64,16 +62,4 @@ public class LexerTest extends TestCase {
         assertEquals(new Token(Type.ZERO_OR_MORE, "*"), lexer.nextToken());
         assertEquals(new Token(Type.ONE_OR_MORE, "+"), lexer.nextToken());
     }
-
-
-    public void test_lookahead() {
-        Lexer lexer = new LexerImpl("a[a-z]+z?");
-        List<Token> tokens = new ArrayList<Token>();
-        while (lexer.hasNext()) {
-            tokens.add(lexer.nextToken());
-        }
-        tokens.size();
-    }
-
-
 }

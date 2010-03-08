@@ -8,10 +8,10 @@ import java.util.regex.Pattern;
 /**
  *
  */
-public class NFATest2 extends TestCase {
+public class NFATest2 {
 
 
-    public void test() {
+    public void _test() {
         String pattern = "a?a?.a?.a?.a?.a?.a?.a?.a?.a?.a?.a?.a?.a?.a?.a?.a?.a?.a?.a?.a?.a?.a?.a?.a?.a?.a?.a?.a?.a?.a?.a?.a?.a?.a?.a?.a?.a?.a?.a?.a?.a?.a?.a?."+
                 "a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.a.";
 

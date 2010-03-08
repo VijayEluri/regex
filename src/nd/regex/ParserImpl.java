@@ -29,28 +29,29 @@ class ParserImpl implements Parser {
                 case ZERO_OR_ONE:
                 case ZERO_OR_MORE:
                 case ONE_OR_MORE:
-                case LEFT_CURLY_BRACKET: {
+                case LEFT_CURLY_BRACKET:
                     parseQuantifier(root);
                     break;
-                }
 
                 case LEFT_BRACKET:
-                case LEFT_BRACKET_CARET: {
+                case LEFT_BRACKET_CARET:
                     parseCharacterClass(root);
                     break;
-                }
 
-                case CHARACTER:
                 case CLASS_ANY_CHARACTER:
                 case CLASS_DIGIT:
                 case CLASS_NON_DIGIT:
                 case CLASS_WHITESPACE:
                 case CLASS_NON_WHITESPACE:
                 case CLASS_WORD_CHARACTER:
-                case CLASS_NON_WORD_CHARACTER: {
+                case CLASS_NON_WORD_CHARACTER:
+                    parsePredefinedCharacterClass(root);
+                    break;
+
+                case CHARACTER:
                     parseCharacter(root);
                     break;
-                }
+
                 default:
                     throw new Error("Unexpected token " + current);
             }
@@ -139,31 +140,80 @@ class ParserImpl implements Parser {
         return quantifier;
     }
 
+    private void parsePredefinedCharacterClass(AST currentRoot) {
+        switch (current.type()) {
+            case CLASS_ANY_CHARACTER:
+                match(Type.CLASS_ANY_CHARACTER);
+                currentRoot.addChild(ANY_CHARACTER_CLASS_NODE);
+                break;
+            case CLASS_DIGIT:
+                match(Type.CLASS_DIGIT);
+                currentRoot.addChild(ANY_DIGIT_CLASS_NODE);
+                break;
+            case CLASS_NON_DIGIT:
+                match(Type.CLASS_NON_DIGIT);
+                currentRoot.addChild(ANY_NON_DIGIT_CLASS_NODE);
+                break;
+            case CLASS_WHITESPACE:
+                match(Type.CLASS_WHITESPACE);
+                currentRoot.addChild(ANY_WHITESPACE_CLASS_NODE);
+                break;
+            case CLASS_NON_WHITESPACE:
+                match(Type.CLASS_NON_WHITESPACE);
+                currentRoot.addChild(ANY_NON_WHITESPACE_CLASS_NODE);
+                break;
+            case CLASS_WORD_CHARACTER:
+                match(Type.CLASS_WORD_CHARACTER);
+                currentRoot.addChild(ANY_WORD_CHARACTER_CLASS_NODE);
+                break;
+            case CLASS_NON_WORD_CHARACTER:
+                match(Type.CLASS_NON_WORD_CHARACTER);
+                currentRoot.addChild(ANY_NON_WORD_CHARACTER_CLASS_NODE);
+                break;
+            default:
+                throw new Error("Unexpected token " + current);
+        }
+    }
+
     private void parseCharacterClass(AST currentRoot) {
         AST charClass = new CharacterClassNode(current);
         match(current.type());
-        while (current.type() != Type.RIGHT_BRACKET) {
+        while (true) {
             switch (current.type()) {
-                case CHARACTER: {
-                    if (lookahead(1).text().equals("-")) {
+                case RIGHT_BRACKET:
+                    if (lookBehind(1).type() == Type.LEFT_BRACKET || lookBehind(1).type() == Type.LEFT_BRACKET_CARET) {
+                        charClass.addChild(new CharacterNode(new Token(Type.CHARACTER, "]")));
+                        match(Type.RIGHT_BRACKET);
+                    } else {
+                        currentRoot.addChild(charClass);
+                        match(Type.RIGHT_BRACKET);
+                        return;
+                    }
+                    break;
+                case LEFT_BRACKET:
+                case LEFT_BRACKET_CARET:
+                    parseCharacterClass(charClass);
+                    break;
+                case CHARACTER:
+                    if (lookahead(1).text().equals("-") && lookahead(2).type() == Type.CHARACTER) {
                         parseCharacterClassInterval(charClass);
                     } else {
                         parseCharacter(charClass);
                     }
                     break;
-                }
                 case EOF: throw new Error("Unexpected token " + current);
+                default:
+                    charClass.addChild(new CharacterNode(new Token(Type.CHARACTER, String.valueOf(current.text()))));
+                    match(current.type());
             }
         }
-        match(Type.RIGHT_BRACKET);
-        currentRoot.addChild(charClass);
     }
 
     private void parseCharacterClassInterval(AST currentRoot) {
         CharacterNode lowBound = new CharacterNode(current);
         match(Type.CHARACTER);
         match(Type.CHARACTER);
-        if (current.type() == Type.RIGHT_BRACKET || current.type() == Type.EOF) {
+        if (current.type() == Type.EOF) {
             throw new Error("Unexpected token " + current);
         } else {
             CharacterNode highBound = new CharacterNode(current);
@@ -204,5 +254,53 @@ class ParserImpl implements Parser {
     private Token lookahead(int i) {
         if (currentIndex + i >= tokens.size()) return new Token(Type.EOF, "EOF");
         return tokens.get(currentIndex + i);
+    }
+
+    private Token lookBehind(int i) {
+        if (currentIndex - i < 0) return new Token(Type.EOF, "EOF");
+        return tokens.get(currentIndex - i);
+    }
+
+
+    private static final CharacterClassNode ANY_CHARACTER_CLASS_NODE = new CharacterClassNode(new Token(Type.CLASS_ANY_CHARACTER, "."));
+    private static final CharacterClassNode ANY_DIGIT_CLASS_NODE = new CharacterClassNode(new Token(Type.LEFT_BRACKET, "["));
+    private static final CharacterClassNode ANY_NON_DIGIT_CLASS_NODE = new CharacterClassNode(new Token(Type.LEFT_BRACKET_CARET, "[^"));
+    private static final CharacterClassNode ANY_WHITESPACE_CLASS_NODE = new CharacterClassNode(new Token(Type.LEFT_BRACKET, "["));
+    private static final CharacterClassNode ANY_NON_WHITESPACE_CLASS_NODE = new CharacterClassNode(new Token(Type.LEFT_BRACKET_CARET, "[^"));
+    private static final CharacterClassNode ANY_WORD_CHARACTER_CLASS_NODE = new CharacterClassNode(new Token(Type.LEFT_BRACKET, "["));
+    private static final CharacterClassNode ANY_NON_WORD_CHARACTER_CLASS_NODE = new CharacterClassNode(new Token(Type.LEFT_BRACKET_CARET, "[^"));
+
+    static {
+        CharacterClassIntervalNode digitsInterval = new CharacterClassIntervalNode(
+                new CharacterNode(new Token(Type.CHARACTER, "0")),
+                new CharacterNode(new Token(Type.CHARACTER, "9")));
+        ANY_DIGIT_CLASS_NODE.addChild(digitsInterval);
+        ANY_NON_DIGIT_CLASS_NODE.addChild(digitsInterval);
+
+        List<CharacterNode> whitespaces = new ArrayList<CharacterNode>();
+        whitespaces.add(new CharacterNode(new Token(Type.CHARACTER, " ")));
+        whitespaces.add(new CharacterNode(new Token(Type.CHARACTER, "\t")));
+        whitespaces.add(new CharacterNode(new Token(Type.CHARACTER, "\n")));
+        whitespaces.add(new CharacterNode(new Token(Type.CHARACTER, "\f")));
+        whitespaces.add(new CharacterNode(new Token(Type.CHARACTER, "\r")));
+        for (CharacterNode ws : whitespaces) {
+            ANY_WHITESPACE_CLASS_NODE.addChild(ws);
+            ANY_NON_WHITESPACE_CLASS_NODE.addChild(ws);
+        }
+
+        CharacterClassIntervalNode lowerCaseInterval = new CharacterClassIntervalNode(
+                new CharacterNode(new Token(Type.CHARACTER, "a")),
+                new CharacterNode(new Token(Type.CHARACTER, "z")));
+        CharacterClassIntervalNode upperCaseInterval = new CharacterClassIntervalNode(
+                new CharacterNode(new Token(Type.CHARACTER, "a")),
+                new CharacterNode(new Token(Type.CHARACTER, "z")));
+        ANY_WORD_CHARACTER_CLASS_NODE.addChild(lowerCaseInterval);
+        ANY_WORD_CHARACTER_CLASS_NODE.addChild(upperCaseInterval);
+        ANY_WORD_CHARACTER_CLASS_NODE.addChild(digitsInterval);
+        ANY_WORD_CHARACTER_CLASS_NODE.addChild(new CharacterNode(new Token(Type.CHARACTER, "_")));
+        ANY_NON_WORD_CHARACTER_CLASS_NODE.addChild(lowerCaseInterval);
+        ANY_NON_WORD_CHARACTER_CLASS_NODE.addChild(upperCaseInterval);
+        ANY_NON_WORD_CHARACTER_CLASS_NODE.addChild(digitsInterval);
+        ANY_NON_WORD_CHARACTER_CLASS_NODE.addChild(new CharacterNode(new Token(Type.CHARACTER, "_")));
     }
 }

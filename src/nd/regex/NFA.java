@@ -74,6 +74,41 @@ class NFA {
         }
     }
 
+    static class AnyCharacterState extends State {
+        private State output;
+
+        AnyCharacterState() {
+        }
+
+        @Override
+        List<State> step(Character c) {
+            if (output != null) {
+                return Collections.singletonList(output);
+            } else {
+                return Collections.emptyList();
+            }
+        }
+
+        @Override
+        boolean match(Character c) {
+            return true;
+        }
+
+        @Override
+        void patch(State s) {
+            if (output == null) {
+                output = s;
+            } else {
+                output.patch(s);
+            }
+        }
+
+        @Override
+        public String toString() {
+            return "(s" + id +")-any->" + (output != null ? output.toString() : "");
+        }
+    }
+
     static class CharacterIntervalState extends State {
         private final char lowBound;
         private final char highBound;
@@ -139,7 +174,7 @@ class NFA {
         @Override
         void patch(State s) {
             s1.patch(s);
-            s2.patch(s);
+            s2.patch(new Unpatchable(s));
         }
 
         @Override
@@ -156,6 +191,43 @@ class NFA {
         void setFinal(boolean aFinal) {
             s1.setFinal(aFinal);
             s2.setFinal(aFinal);
+        }
+    }
+
+    static class NotState extends State {
+        private final State s;
+        private State output;
+
+        NotState(State s) {
+            this.s = s;
+        }
+
+        @Override
+        List<State> step(Character c) {
+            if (output != null && match(c)) {
+                return Collections.singletonList(output);
+            } else {
+                return Collections.emptyList();
+            }
+        }
+
+        @Override
+        boolean match(Character c) {
+            return !s.match(c);
+        }
+
+        @Override
+        void patch(State s) {
+            if (output == null) {
+                output = s;
+            } else {
+                output.patch(s);
+            }
+        }
+
+        @Override
+        public String toString() {
+            return String.format("(NOT%d %s %s)", id, s, output != null ? output : "null");
         }
     }
 

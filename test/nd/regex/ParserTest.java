@@ -2,11 +2,7 @@ package nd.regex;
 
 import junit.framework.TestCase;
 
-import java.util.HashSet;
-import java.util.Set;
-
 import static nd.regex.Token.Type;
-import static nd.regex.NFA.*;
 
 /**
  *
@@ -62,12 +58,31 @@ public class ParserTest extends TestCase {
     }
 
     public void test_character_class_simple() {
-        Parser parser = new ParserImpl(new LexerImpl("a[abc]b"));
+        Parser parser = new ParserImpl(new LexerImpl("a[]abc]b"));
         AST ast = parser.parse();
         assertEquals(3, ast.children().size());
         CharacterClassNode charClass = (CharacterClassNode) ast.children().get(1);
         assertEquals(new Token(Type.LEFT_BRACKET, "["), charClass.token());
+        assertEquals(4, charClass.children().size());
+        assertEquals(new Token(Type.CHARACTER, "]"), charClass.children().get(0).token());
+    }
+
+    public void test_character_class_inner() {
+        Parser parser = new ParserImpl(new LexerImpl("a[]a[^bc]]b"));
+        AST ast = parser.parse();
+        assertEquals(3, ast.children().size());
+
+        CharacterClassNode charClass = (CharacterClassNode) ast.children().get(1);
+        assertEquals(new Token(Type.LEFT_BRACKET, "["), charClass.token());
         assertEquals(3, charClass.children().size());
+        assertEquals(new Token(Type.CHARACTER, "]"), charClass.children().get(0).token());
+        assertEquals(new Token(Type.CHARACTER, "a"), charClass.children().get(1).token());
+
+        CharacterClassNode inner = (CharacterClassNode) charClass.children().get(2);
+        assertEquals(new Token(Type.LEFT_BRACKET_CARET, "[^"), inner.token());
+        assertEquals(2, inner.children().size());
+        assertEquals(new Token(Type.CHARACTER, "b"), inner.children().get(0).token());
+        assertEquals(new Token(Type.CHARACTER, "c"), inner.children().get(1).token());
     }
 
     public void test_character_class_interval() {
@@ -87,49 +102,9 @@ public class ParserTest extends TestCase {
         assertEquals(new Token(Type.CHARACTER, "z"), interval2.highBound().token());
     }
 
-    public void test_print() {
-        Parser parser = new ParserImpl(new LexerImpl("abc[a-z]*o?"));
-        AST ast = parser.parse();
-        ast.visit(new PrintVisitor());
-    }
-
     public void test_print2() {
         Parser parser = new ParserImpl(new LexerImpl("abc[a-z]*o?k+g{12,15}"));
         AST ast = parser.parse();
         ast.visit(new PrintVisitor2());
     }
-
-    public void test_nfa() {
-        Parser parser = new ParserImpl(new LexerImpl("abc{2,4}[d-o]*"));
-        AST ast = parser.parse();
-        NFA.State s = ast.visit(new NFABuilder());
-
-        String str = "abcca";
-        boolean found = false;
-        Set<State> current = new HashSet<State>();
-        current.add(s);
-        for (int i = 0; i < str.length(); i++) {
-            Character c = str.charAt(i);
-            Set<State> next = new HashSet<State>();
-            for (State state : current) {
-                if (state.isFinal()) {
-                    found = true;
-                    break;
-                }
-            }
-            for (State state : current) {
-                if (state != null && state.match(c))
-                    next.addAll(state.step(c));
-            }
-            current = next;
-            current.add(s);
-        }
-        if (!found) {
-            for (State state : current) {
-                if (state.isFinal()) found = true;
-            }
-        }
-        System.out.println(found);
-    }
-
 }

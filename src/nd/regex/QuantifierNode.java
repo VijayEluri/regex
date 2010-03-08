@@ -46,9 +46,4 @@ abstract class QuantifierNode implements AST {
     public AST removeLastChild() {
         throw new UnsupportedOperationException();
     }
-
-    @Override
-    public <E> E visit(ASTVisitor<E> visitor) {
-        return visitor.visit(this);
-    }
 }

@@ -62,8 +62,9 @@ class NFABuilder implements ASTNodeVisitor<State> {
         }
         if (first == null) {
             first = quantifier.term().visit(this);
-            first.patch(new Unpatchable(first));
-            first = new OrState(first, new EmptyState());
+            State or = new OrState(new Unpatchable(first), new EmptyState());
+            first.patch(or);
+            first = or;
         } else {
             State or = new OrState(new Unpatchable(first), new EmptyState());
             first.patch(or);
@@ -74,17 +75,24 @@ class NFABuilder implements ASTNodeVisitor<State> {
     @Override
     public State visit(CharacterClassNode charClass) {
         State charClassState = null;
-        for (AST child : charClass.children()) {
-            if (charClassState == null) {
-                charClassState = child.visit(this);
-            } else {
-                charClassState = new OrState(charClassState, child.visit(this));
+        if (charClass.token().type() == Token.Type.CLASS_ANY_CHARACTER) {
+            charClassState = new AnyCharacterState();
+        } else {
+            for (AST child : charClass.children()) {
+                if (charClassState == null) {
+                    charClassState = child.visit(this);
+                } else {
+                    charClassState = new OrState(charClassState, child.visit(this));
+                }
             }
         }
         if (charClassState == null) {
-            charClassState = new EmptyState();
+            return new EmptyState();
+        } else if (charClass.exclusive()) {
+            return new NotState(charClassState);
+        } else {
+            return charClassState;
         }
-        return charClassState;
     }
 
     @Override

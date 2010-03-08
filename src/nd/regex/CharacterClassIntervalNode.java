@@ -42,11 +42,6 @@ class CharacterClassIntervalNode implements AST {
         throw new UnsupportedOperationException();
     }
 
-    @Override
-    public <E> E visit(ASTVisitor<E> visitor) {
-        return visitor.visit(this);
-    }
-
     CharacterNode lowBound() {
         return lowBound;
     }

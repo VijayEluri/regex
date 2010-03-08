@@ -15,7 +15,5 @@ interface AST {
 
     AST removeLastChild();
 
-    <E> E visit(ASTVisitor<E> visitor);
-
     <E> E visit(ASTNodeVisitor<E> visitor);
 }

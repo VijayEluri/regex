@@ -46,6 +46,7 @@ class Token {
         LEFT_BRACKET_CARET,
         RIGHT_BRACKET,
         CARET,
+        DOLLAR,
         WORD_BOUNDARY,
         NON_WORD_BOUNDARY,
         ZERO_OR_ONE,

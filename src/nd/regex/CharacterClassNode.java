@@ -9,10 +9,16 @@ import java.util.List;
 class CharacterClassNode implements AST {
 
     private final Token token;
-    private List<AST> classElements = new ArrayList<AST>();
+    private final List<AST> classElements = new ArrayList<AST>();
+    private final boolean exclusive;
 
     CharacterClassNode(Token token) {
         this.token = token;
+        exclusive = token.type() == Token.Type.LEFT_BRACKET_CARET;
+    }
+
+    boolean exclusive() {
+        return exclusive;
     }
 
     @Override
@@ -33,11 +39,6 @@ class CharacterClassNode implements AST {
     @Override
     public AST removeLastChild() {
         return classElements.remove(classElements.size() - 1);
-    }
-
-    @Override
-    public <E> E visit(ASTVisitor<E> visitor) {
-        return visitor.visit(this);
     }
 
     @Override

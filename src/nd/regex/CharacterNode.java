@@ -35,11 +35,6 @@ class CharacterNode implements AST {
     }
 
     @Override
-    public <E> E visit(ASTVisitor<E> visitor) {
-        return visitor.visit(this);
-    }
-
-    @Override
     public <E> E visit(ASTNodeVisitor<E> visitor) {
         return visitor.visit(this);
     }

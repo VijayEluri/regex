@@ -21,115 +21,138 @@ final class LexerImpl implements Lexer {
     @Override
     public Token nextToken() {
         while (current != EOF) {
-            if (current == '[') {
+            if (isSpecialCharacter(current)) {
+                return parseSpecialCharacter();
+            } else {
+                Token token = new Token(Type.CHARACTER, String.valueOf(current));
+                consume();
+                return token;
+            }
+        }
+        return new Token(Type.EOF, "EOF");
+    }
+
+
+    private boolean isSpecialCharacter(char c) {
+        return c == '[' ||
+               c == ']' ||
+               c == '^' ||
+               c == '.' ||
+               c == '?' ||
+               c == '*' ||
+               c == '+' ||
+               c == '\\'||
+               c == '{' ||
+               c == '}' ||
+               c == '(' ||
+               c == ')' ||
+               c == '$' ||
+               c == '-' ||
+               c == '|';
+    }
+
+    private Token parseSpecialCharacter() {
+        switch (current) {
+            case '[': {
                 consume();
                 if (current == '^') {
+                    consume();
                     return new Token(Type.LEFT_BRACKET_CARET, "[^");
                 } else {
                     return new Token(Type.LEFT_BRACKET, "[");
                 }
-            } else if (current == ']') {
+            }
+            case ']': {
                 consume(); return new Token(Type.RIGHT_BRACKET, "]");
-            } else if (current == '^') {
+            }
+            case '^': {
                 consume(); return new Token(Type.CARET, "^");
-            } else if (current == '.') {
-                consume(); return new Token(Type.CLASS_ANY_CHARACTER, ".");
-            } else if (current == '?') {
-                consume(); return new Token(Type.ZERO_OR_ONE, "?");
-            } else if (current == '*') {
-                consume(); return new Token(Type.ZERO_OR_MORE, "*");
-            } else if (current == '+') {
-                consume(); return new Token(Type.ONE_OR_MORE, "+");
-            } else if (current == '\\') {
+            }
+            case '$': {
+                consume(); return new Token(Type.DOLLAR, "$");
+            }
+            case '.': {
                 consume();
-                return parseMetacharacter();
-            } else if (current == '{') {
+                return new Token(Type.CLASS_ANY_CHARACTER, ".");
+            }
+            case '?': {
+                consume();
+                return new Token(Type.ZERO_OR_ONE, "?");
+            }
+            case '*': {
+                consume();
+                return new Token(Type.ZERO_OR_MORE, "*");
+            }
+            case '+': {
+                consume();
+                return new Token(Type.ONE_OR_MORE, "+");
+            }
+            case '-': {
+                consume();
+                return new Token(Type.CHARACTER, "-");
+            }
+            case '\\': {
+                consume();
+                return parseSlashCombination();
+            }
+            case '{': {
                 consume();
                 return new Token(Type.LEFT_CURLY_BRACKET, "{");
-            } else if (current == '}') {
+            }
+            case '}': {
                 consume();
                 return new Token(Type.RIGHT_CURLY_BRACKET, "}");
-            } else if (current == '(') {
+            }
+            case '(': {
                 consume();
                 return new Token(Type.LEFT_PAREN, "(");
-            } else if (current == ')') {
+            }
+            case ')': {
                 consume();
                 return new Token(Type.RIGHT_PAREN, ")");
-            } else if (current == '|') {
+            }
+            case '|': {
                 consume();
                 return new Token(Type.OR, "|");
-            } else {
-                char tmp = current;
-                consume(); return new Token(Type.CHARACTER, String.valueOf(tmp));
             }
+            default:
+                throw new Error("Unexpected character " + current);
         }
-        return new Token(Type.EOF, "<EOF>");
     }
 
-
-    private Token parseMetacharacter() {
-        if (current == '\\') {
+    private Token parseSlashCombination() {
+        if (isSpecialCharacter(current)) {
+            Token token = new Token(Type.CHARACTER, String.valueOf(current));
             consume();
-            return new Token(Type.CHARACTER, "\\");
-        } else if (current == '.') {
-            consume();
-            return new Token(Type.CHARACTER, ".");
-        } else if (current == '+') {
-            consume();
-            return new Token(Type.CHARACTER, "+");
-        } else if (current == '|') {
-            consume();
-            return new Token(Type.CHARACTER, "|");
-        } else if (current == '^') {
-            consume();
-            return new Token(Type.CHARACTER, "^");
-        } else if (current == '$') {
-            consume();
-            return new Token(Type.CHARACTER, "$");
-        } else if (current == '(') {
-            consume();
-            return new Token(Type.CHARACTER, "(");
-        } else if (current == ')') {
-            consume();
-            return new Token(Type.CHARACTER, ")");
-        } else if (current == '{') {
-            consume();
-            return new Token(Type.CHARACTER, "{");
-        } else if (current == '}') {
-            consume();
-            return new Token(Type.CHARACTER, "}");
-        } else if (current == '[') {
-            consume();
-            return new Token(Type.CHARACTER, "[");
-        } else if (current == ']') {
-            consume();
-            return  new Token(Type.CHARACTER, "]");
-        } else if (current == 'd') {
-            consume();
-            return new Token(Type.CLASS_DIGIT, "d");
-        } else if (current == 'D') {
-            consume();
-            return new Token(Type.CLASS_NON_DIGIT, "D");
-        } else if (current == 's') {
-            consume();
-            return new Token(Type.CLASS_WHITESPACE, "s");
-        } else if (current == 'S') {
-            consume();
-            return new Token(Type.CLASS_NON_WHITESPACE, "S");
-        } else if (current == 'w') {
-            consume();
-            return new Token(Type.CLASS_WORD_CHARACTER, "w");
-        } else if (current == 'W') {
-            consume();
-            return new Token(Type.CLASS_NON_WORD_CHARACTER, "W");
-        } else if (current == 'b') {
-            consume();
-            return new Token(Type.WORD_BOUNDARY, "b");
-        } else if (current == 'B') {
-            consume();
-            return new Token(Type.NON_WORD_BOUNDARY, "B");
+            return token;
+        } else {
+            if (current == 'd') {
+                consume();
+                return new Token(Type.CLASS_DIGIT, "d");
+            } else if (current == 'D') {
+                consume();
+                return new Token(Type.CLASS_NON_DIGIT, "D");
+            } else if (current == 's') {
+                consume();
+                return new Token(Type.CLASS_WHITESPACE, "s");
+            } else if (current == 'S') {
+                consume();
+                return new Token(Type.CLASS_NON_WHITESPACE, "S");
+            } else if (current == 'w') {
+                consume();
+                return new Token(Type.CLASS_WORD_CHARACTER, "w");
+            } else if (current == 'W') {
+                consume();
+                return new Token(Type.CLASS_NON_WORD_CHARACTER, "W");
+            } else if (current == 'b') {
+                consume();
+                return new Token(Type.WORD_BOUNDARY, "b");
+            } else if (current == 'B') {
+                consume();
+                return new Token(Type.NON_WORD_BOUNDARY, "B");
+            }
+            throw new RuntimeException("Unexpected character " + current);
         }
-        throw new RuntimeException("Unexpected character");
     }
 
 
@@ -146,10 +169,4 @@ final class LexerImpl implements Lexer {
             current = pattern.charAt(currentIndex);
         }
     }
-
-    private char lookaheadChar(int i) {
-        if (currentIndex + i >= pattern.length()) return EOF;
-        return pattern.charAt(currentIndex + i);
-    }
-
 }
