@@ -10,9 +10,19 @@ class SequenceNode implements AST {
 
     private final Token token;
     private final List<AST> children = new ArrayList<AST>();
+    private final boolean root;
 
     SequenceNode(Token token) {
+        this(token, false);
+    }
+
+    SequenceNode(Token token, boolean root) {
         this.token = token;
+        this.root  = root;
+    }
+
+    boolean isRoot() {
+        return root;
     }
 
     @Override

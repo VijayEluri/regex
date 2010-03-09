@@ -23,40 +23,48 @@ class ParserImpl implements Parser {
     @Override
     public AST parse() {
         init();
-        AST root = new SequenceNode(new Token(Type.SEQUENCE, ""));
+        AST root = new SequenceNode(new Token(Type.SEQUENCE, ""), true);
         while (current.type() != Type.EOF) {
-            switch (current.type()) {
-                case ZERO_OR_ONE:
-                case ZERO_OR_MORE:
-                case ONE_OR_MORE:
-                case LEFT_CURLY_BRACKET:
-                    parseQuantifier(root);
-                    break;
-
-                case LEFT_BRACKET:
-                case LEFT_BRACKET_CARET:
-                    parseCharacterClass(root);
-                    break;
-
-                case CLASS_ANY_CHARACTER:
-                case CLASS_DIGIT:
-                case CLASS_NON_DIGIT:
-                case CLASS_WHITESPACE:
-                case CLASS_NON_WHITESPACE:
-                case CLASS_WORD_CHARACTER:
-                case CLASS_NON_WORD_CHARACTER:
-                    parsePredefinedCharacterClass(root);
-                    break;
-
-                case CHARACTER:
-                    parseCharacter(root);
-                    break;
-
-                default:
-                    throw new Error("Unexpected token " + current);
-            }
+            parse(root, current);
         }
         return root;
+    }
+
+    private void parse(AST currentRoot, Token token) {
+        switch (token.type()) {
+            case ZERO_OR_ONE:
+            case ZERO_OR_MORE:
+            case ONE_OR_MORE:
+            case LEFT_CURLY_BRACKET:
+                parseQuantifier(currentRoot);
+                break;
+
+            case LEFT_BRACKET:
+            case LEFT_BRACKET_CARET:
+                parseCharacterClass(currentRoot);
+                break;
+
+            case LEFT_PAREN:
+                parseGroup(currentRoot);
+                break;
+
+            case CLASS_ANY_CHARACTER:
+            case CLASS_DIGIT:
+            case CLASS_NON_DIGIT:
+            case CLASS_WHITESPACE:
+            case CLASS_NON_WHITESPACE:
+            case CLASS_WORD_CHARACTER:
+            case CLASS_NON_WORD_CHARACTER:
+                parsePredefinedCharacterClass(currentRoot);
+                break;
+
+            case CHARACTER:
+                parseCharacter(currentRoot);
+                break;
+
+            default:
+                throw new Error("Unexpected token " + token);
+        }
     }
 
     private void parseCharacter(AST currentRoot) {
@@ -173,6 +181,23 @@ class ParserImpl implements Parser {
             default:
                 throw new Error("Unexpected token " + current);
         }
+    }
+
+    private void parseGroup(AST currentRoot) {
+        AST group = new SequenceNode(current);
+        match(Type.LEFT_PAREN);
+        while (current.type() != Type.RIGHT_PAREN) {
+            switch (current.type()) {
+                case LEFT_PAREN:
+                    parseGroup(group);
+                    break;
+                default:
+                    parse(group, current);
+                    break;
+            }
+        }
+        match(Type.RIGHT_PAREN);
+        currentRoot.addChild(group);
     }
 
     private void parseCharacterClass(AST currentRoot) {

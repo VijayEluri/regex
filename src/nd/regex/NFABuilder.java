@@ -19,7 +19,7 @@ class NFABuilder implements ASTNodeVisitor<State> {
             } else {
                 first = childState;
             }
-            if (!iter.hasNext()) {
+            if (!iter.hasNext() && sequence.isRoot()) {
                 State f = new EmptyState();
                 f.setFinal(true);
                 childState.patch(f);
