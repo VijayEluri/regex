@@ -29,7 +29,7 @@ final class LexerImpl implements Lexer {
                 return token;
             }
         } else {
-            return new Token(Type.EOF, "EOF");            
+            return new Token(Type.EOF, "EOF");
         }
     }
 
@@ -77,7 +77,7 @@ final class LexerImpl implements Lexer {
             case '(' : return new Token(Type.LEFT_PAREN, "(");
             case ')' : return new Token(Type.RIGHT_PAREN, ")");
             case '|' : return new Token(Type.OR, "|");
-            default  : throw new Error("Unexpected character " + c);
+            default  : throw new LexerException("Unexpected character " + c);
         }
     }
 
@@ -96,8 +96,8 @@ final class LexerImpl implements Lexer {
                 case 'W': return new Token(Type.CLASS_NON_WORD_CHARACTER, "W");
                 case 'b': return new Token(Type.WORD_BOUNDARY, "b");
                 case 'B': return new Token(Type.NON_WORD_BOUNDARY, "B");
+                default : throw new LexerException("Unexpected character " + c); 
             }
-            throw new RuntimeException("Unexpected character " + current);
         }
     }
 
@@ -113,6 +113,12 @@ final class LexerImpl implements Lexer {
             current = EOF;
         } else {
             current = pattern.charAt(currentIndex);
+        }
+    }
+
+    private static class LexerException extends Error {
+        public LexerException(String message) {
+            super(message);
         }
     }
 }
