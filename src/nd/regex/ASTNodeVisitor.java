@@ -16,4 +16,6 @@ public interface ASTNodeVisitor<E> {
     E visit(CharacterClassIntervalNode interval);
 
     E visit(CharacterNode character);
+
+    E visit(AlternativeNode alternative);
 }

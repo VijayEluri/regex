@@ -1,6 +1,7 @@
 package nd.regex;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import static nd.regex.Token.Type;
@@ -42,6 +43,10 @@ class ParserImpl implements Parser {
             case LEFT_BRACKET:
             case LEFT_BRACKET_CARET:
                 parseCharacterClass(currentRoot);
+                break;
+
+            case OR:
+                parseAlternative(currentRoot, false);
                 break;
 
             case LEFT_PAREN:
@@ -183,11 +188,34 @@ class ParserImpl implements Parser {
         }
     }
 
+    private void parseAlternative(AST currentRoot, boolean inGroup) {
+        match(Type.OR);
+        List<AST> firstAlternative = new ArrayList<AST>();
+        while (!currentRoot.children().isEmpty()) {
+            firstAlternative.add(currentRoot.removeLastChild());
+        }
+        Collections.reverse(firstAlternative);
+        AST alternative = new AlternativeNode(firstAlternative);
+        if (inGroup) {
+            while (current.type() != Type.EOF && current.type() != Type.RIGHT_PAREN) {
+                parse(alternative, current);
+            }                         
+        } else {
+            while (current.type() != Type.EOF) {
+                parse(alternative, current);
+            }
+        }
+        currentRoot.addChild(alternative);
+    }
+
     private void parseGroup(AST currentRoot) {
         AST group = new SequenceNode(current);
         match(Type.LEFT_PAREN);
         while (current.type() != Type.RIGHT_PAREN) {
             switch (current.type()) {
+                case OR:
+                    parseAlternative(group, true);
+                    break;
                 case LEFT_PAREN:
                     parseGroup(group);
                     break;

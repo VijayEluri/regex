@@ -29,6 +29,7 @@ abstract public class MatcherTestCase extends TestCase {
         if (buildIndExceptionsThrown) {
             assertTrue("Exception should be thrown", exceptionThrown);
         } else {
+            assertFalse("Exception thrown but result " + buildInResult + " is expected", exceptionThrown);
             assertEquals("Wrong result", buildInResult, result);
         }
     }

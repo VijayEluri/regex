@@ -23,9 +23,32 @@ class NFABuilder implements ASTNodeVisitor<State> {
                 State f = new EmptyState();
                 f.setFinal(true);
                 childState.patch(f);
-            }
+            }                
         }
         return first;
+    }
+
+    @Override
+    public State visit(AlternativeNode alternative) {
+        State first = null;
+        for (Iterator<AST> iter = alternative.getFirstAlternative().iterator(); iter.hasNext();) {
+            State childState = iter.next().visit(this);
+            if (first != null) {
+                first.patch(childState);
+            } else {
+                first = childState;
+            }
+        }
+        State second = null;
+        for (Iterator<AST> iter = alternative.getSecondAlternative().iterator(); iter.hasNext();) {
+            State childState = iter.next().visit(this);
+            if (second != null) {
+                second.patch(childState);
+            } else {
+                second = childState;
+            }
+        }
+        return new OrState(first, second);
     }
 
     @Override
