@@ -13,10 +13,13 @@ class Token {
         this.text = text;
     }
 
+    Type type() {
+        return type;
+    }
 
-    Type type() {return type;}
-
-    String text() {return text;}
+    String text() {
+        return text;
+    }
 
     @Override
     public boolean equals(Object other) {

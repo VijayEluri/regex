@@ -1,15 +1,41 @@
 package nd.regex;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 /**
- *
+ * Non-deterministic Finite Automaton (NFA).
+ * NFA is just set of states properly linked with each other.
  */
 class NFA {
 
+    /**
+     * Emulate work of NFA from its first state
+     * @param str string to work with
+     * @param firstState first state of NFA to emulate
+     * @return true if NFA match string, otherwise false
+     */
+    static boolean emulate(String str, State firstState) {
+        Set<State> current = new HashSet<State>();
+        current.add(firstState);
+        for (int i = 0; i < str.length(); i++) {
+            Character c = str.charAt(i);
+            Set<State> next = new HashSet<State>();
+            for (State state : current) {
+                next.addAll(state.step(c));
+            }
+            current = next;
+        }
+        for (State state : current) {
+            if (state.isFinal()) return true;
+        }
+        return false;
+    }
+
+    /**
+     * Base State class, define interface for other states.
+     */
     abstract static class State {
+
         static private int seq = 0;
         private boolean isFinal;
         protected final int id;
@@ -18,12 +44,41 @@ class NFA {
             id = seq++;
         }
 
+        /**
+         * Step through state with character c
+         * @param c input character for state
+         * @return list of states to match for next character
+         */
         abstract List<State> step(Character c);
+
+        /**
+         * Check if state match character
+         * @param c character to check
+         * @return true if state match character, false otherwise
+         */
         abstract boolean match(Character c);
+
+        /**
+         * Link state with next state
+         * @param s next state
+         */
         abstract void patch(State s);
 
-        boolean isFinal() {return isFinal;}
-        void setFinal(boolean aFinal) {isFinal = aFinal;}
+        /**
+         * Check if this state is final
+         * @return true if state is final
+         */
+        boolean isFinal() {
+            return isFinal;
+        }
+
+        /**
+         * Make this state final flag
+         * @param aFinal final flag
+         */
+        void setFinal(boolean aFinal) {
+            isFinal = aFinal;
+        }
 
         @Override
         public final boolean equals(Object other) {
@@ -37,6 +92,9 @@ class NFA {
     }
 
 
+    /**
+     * State for single character
+     */
     static class CharacterState extends State {
         private final Character c;
         private State output;
@@ -74,6 +132,9 @@ class NFA {
         }
     }
 
+    /**
+     * State for any character (.)
+     */
     static class AnyCharacterState extends State {
         private State output;
 
@@ -109,6 +170,9 @@ class NFA {
         }
     }
 
+    /**
+     * State for interval in character class
+     */
     static class CharacterIntervalState extends State {
         private final char lowBound;
         private final char highBound;
@@ -149,6 +213,9 @@ class NFA {
         }
     }
 
+    /**
+     * Used to match one of two alternatives
+     */
     static class OrState extends State {
         private final State s1;
         private final State s2;
@@ -194,6 +261,9 @@ class NFA {
         }
     }
 
+    /**
+     * Wrapper over other state, matches if other state doesn't match and vise versa
+     */
     static class NotState extends State {
         private final State s;
         private State output;
@@ -231,6 +301,9 @@ class NFA {
         }
     }
 
+    /**
+     * State that always matches
+     */
     static class EmptyState extends State {
         private State output;
 
@@ -270,6 +343,9 @@ class NFA {
         }
     }
 
+    /**
+     * Wrapper over other state, protects wrapped state from patching with itself
+     */
     static class Unpatchable extends State {
         private State s;
         Unpatchable(State s) {

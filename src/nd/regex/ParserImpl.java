@@ -39,20 +39,16 @@ class ParserImpl implements Parser {
             case LEFT_CURLY_BRACKET:
                 parseQuantifier(currentRoot);
                 break;
-
             case LEFT_BRACKET:
             case LEFT_BRACKET_CARET:
                 parseCharacterClass(currentRoot);
                 break;
-
             case OR:
                 parseAlternative(currentRoot, false);
                 break;
-
             case LEFT_PAREN:
                 parseGroup(currentRoot);
                 break;
-
             case CLASS_ANY_CHARACTER:
             case CLASS_DIGIT:
             case CLASS_NON_DIGIT:
@@ -62,13 +58,11 @@ class ParserImpl implements Parser {
             case CLASS_NON_WORD_CHARACTER:
                 parsePredefinedCharacterClass(currentRoot);
                 break;
-
             case CHARACTER:
                 parseCharacter(currentRoot);
                 break;
-
             default:
-                throw new Error("Unexpected token " + token);
+                throw new UnexpectedTokenException(token);
         }
     }
 
@@ -79,16 +73,16 @@ class ParserImpl implements Parser {
 
     private void parseQuantifier(AST currentRoot) {
         if (currentRoot.children().isEmpty()) {
-            throw new RuntimeException("Unexpected token " + current);
+            throw new UnexpectedTokenException(current);
         }
         AST term = currentRoot.removeLastChild();
-        AST quantifier = null;
+        AST quantifier;
         if (isPredefinedQuantifier(current.type())) {
             quantifier = parsePredefinedQuantifier(term);
         } else if (isUserDefinedQuantifier(current.type())) {
             quantifier = parseUserDefinedQuantifier(term);
         } else {
-            throw new Error("Unexpected token " + current);
+            throw new UnexpectedTokenException(current);
         }
         currentRoot.addChild(quantifier);
     }
@@ -97,25 +91,19 @@ class ParserImpl implements Parser {
         return t == Type.ZERO_OR_ONE || t == Type.ZERO_OR_MORE || t == Type.ONE_OR_MORE;
     }
 
-    private QuantifierNode parsePredefinedQuantifier(AST term) {
-        QuantifierNode quantifier = null;
-        if (current.type() == Type.ZERO_OR_MORE) {
-            quantifier = new UnboundedQuantifierNode(term, current, 0);
-            match(Type.ZERO_OR_MORE);
-        } else if (current.type() == Type.ONE_OR_MORE) {
-            quantifier = new UnboundedQuantifierNode(term, current, 1);
-            match(Type.ONE_OR_MORE);
-        } else if (current.type() == Type.ZERO_OR_ONE) {
-            quantifier = new BoundedQuantifierNode(term, current, 0, 1);
-            match(Type.ZERO_OR_ONE);
-        } else {
-            throw new Error("Unexpected token " + current);
-        }
-        return quantifier;
-    }
-
     private boolean isUserDefinedQuantifier(Type t) {
         return t == Type.LEFT_CURLY_BRACKET;
+    }
+
+    private QuantifierNode parsePredefinedQuantifier(AST term) {
+        Token token = current;
+        match(current.type());
+        switch (token.type()) {
+            case ZERO_OR_MORE: return new UnboundedQuantifierNode(term, token, 0);
+            case ONE_OR_MORE : return new UnboundedQuantifierNode(term, token, 1);
+            case ZERO_OR_ONE : return new BoundedQuantifierNode(term, token, 0, 1);
+            default: throw new UnexpectedTokenException(token);
+        }
     }
 
     private QuantifierNode parseUserDefinedQuantifier(AST term) {
@@ -128,7 +116,7 @@ class ParserImpl implements Parser {
         boolean oneBound = true;
         while (current.type() != Type.RIGHT_CURLY_BRACKET) {
             if (!Character.isDigit(current.text().charAt(0)) && !current.text().equals(","))
-                throw new Error("Unexpected token " + current);
+                throw new UnexpectedTokenException(current);
             if (current.text().equals(",")) {
                 tmp = high;
                 oneBound = false;
@@ -154,37 +142,17 @@ class ParserImpl implements Parser {
     }
 
     private void parsePredefinedCharacterClass(AST currentRoot) {
-        switch (current.type()) {
-            case CLASS_ANY_CHARACTER:
-                match(Type.CLASS_ANY_CHARACTER);
-                currentRoot.addChild(ANY_CHARACTER_CLASS_NODE);
-                break;
-            case CLASS_DIGIT:
-                match(Type.CLASS_DIGIT);
-                currentRoot.addChild(ANY_DIGIT_CLASS_NODE);
-                break;
-            case CLASS_NON_DIGIT:
-                match(Type.CLASS_NON_DIGIT);
-                currentRoot.addChild(ANY_NON_DIGIT_CLASS_NODE);
-                break;
-            case CLASS_WHITESPACE:
-                match(Type.CLASS_WHITESPACE);
-                currentRoot.addChild(ANY_WHITESPACE_CLASS_NODE);
-                break;
-            case CLASS_NON_WHITESPACE:
-                match(Type.CLASS_NON_WHITESPACE);
-                currentRoot.addChild(ANY_NON_WHITESPACE_CLASS_NODE);
-                break;
-            case CLASS_WORD_CHARACTER:
-                match(Type.CLASS_WORD_CHARACTER);
-                currentRoot.addChild(ANY_WORD_CHARACTER_CLASS_NODE);
-                break;
-            case CLASS_NON_WORD_CHARACTER:
-                match(Type.CLASS_NON_WORD_CHARACTER);
-                currentRoot.addChild(ANY_NON_WORD_CHARACTER_CLASS_NODE);
-                break;
-            default:
-                throw new Error("Unexpected token " + current);
+        Token token = current;
+        match(current.type());
+        switch (token.type()) {
+            case CLASS_ANY_CHARACTER:      currentRoot.addChild(ANY_CHARACTER_CLASS_NODE); break;
+            case CLASS_DIGIT:              currentRoot.addChild(ANY_DIGIT_CLASS_NODE); break;
+            case CLASS_NON_DIGIT:          currentRoot.addChild(ANY_NON_DIGIT_CLASS_NODE);break;
+            case CLASS_WHITESPACE:         currentRoot.addChild(ANY_WHITESPACE_CLASS_NODE);break;
+            case CLASS_NON_WHITESPACE:     currentRoot.addChild(ANY_NON_WHITESPACE_CLASS_NODE);break;
+            case CLASS_WORD_CHARACTER:     currentRoot.addChild(ANY_WORD_CHARACTER_CLASS_NODE);break;
+            case CLASS_NON_WORD_CHARACTER: currentRoot.addChild(ANY_NON_WORD_CHARACTER_CLASS_NODE);break;
+            default: throw new UnexpectedTokenException(token);
         }
     }
 
@@ -196,14 +164,9 @@ class ParserImpl implements Parser {
         }
         Collections.reverse(firstAlternative);
         AST alternative = new AlternativeNode(firstAlternative);
-        if (inGroup) {
-            while (current.type() != Type.EOF && current.type() != Type.RIGHT_PAREN) {
-                parse(alternative, current);
-            }                         
-        } else {
-            while (current.type() != Type.EOF) {
-                parse(alternative, current);
-            }
+        while (current.type() != Type.EOF) {
+            if (inGroup && current.type() == Type.RIGHT_PAREN) break;
+            parse(alternative, current);
         }
         currentRoot.addChild(alternative);
     }
@@ -254,7 +217,8 @@ class ParserImpl implements Parser {
                         parseCharacter(charClass);
                     }
                     break;
-                case EOF: throw new Error("Unexpected token " + current);
+                case EOF:
+                    throw new UnexpectedTokenException(current);
                 default:
                     charClass.addChild(new CharacterNode(new Token(Type.CHARACTER, String.valueOf(current.text()))));
                     match(current.type());
@@ -266,14 +230,10 @@ class ParserImpl implements Parser {
         CharacterNode lowBound = new CharacterNode(current);
         match(Type.CHARACTER);
         match(Type.CHARACTER);
-        if (current.type() == Type.EOF) {
-            throw new Error("Unexpected token " + current);
-        } else {
-            CharacterNode highBound = new CharacterNode(current);
-            match(Type.CHARACTER);
-            CharacterClassIntervalNode interval = new CharacterClassIntervalNode(lowBound, highBound);
-            currentRoot.addChild(interval);
-        }
+        CharacterNode highBound = new CharacterNode(current);
+        match(Type.CHARACTER);
+        CharacterClassIntervalNode interval = new CharacterClassIntervalNode(lowBound, highBound);
+        currentRoot.addChild(interval);
     }
 
     private void init() {
@@ -300,21 +260,28 @@ class ParserImpl implements Parser {
         if (current.type().equals(type)) {
             consume();
         } else {
-            throw new Error("expecting " + type + " found " + current.type());
+            throw new UnexpectedTokenException(current);
         }
     }
 
     private Token lookahead(int i) {
-        if (currentIndex + i >= tokens.size()) return new Token(Type.EOF, "EOF");
-        return tokens.get(currentIndex + i);
+        if (currentIndex + i >= tokens.size()) {
+            return new Token(Type.EOF, "EOF");
+        } else {
+            return tokens.get(currentIndex + i);
+        }
     }
 
     private Token lookBehind(int i) {
-        if (currentIndex - i < 0) return new Token(Type.EOF, "EOF");
-        return tokens.get(currentIndex - i);
+        if (currentIndex - i < 0) {
+            return new Token(Type.EOF, "EOF");
+        } else {
+            return tokens.get(currentIndex - i);
+        }
     }
 
 
+    //nodes for predefined character classes:
     private static final CharacterClassNode ANY_CHARACTER_CLASS_NODE = new CharacterClassNode(new Token(Type.CLASS_ANY_CHARACTER, "."));
     private static final CharacterClassNode ANY_DIGIT_CLASS_NODE = new CharacterClassNode(new Token(Type.LEFT_BRACKET, "["));
     private static final CharacterClassNode ANY_NON_DIGIT_CLASS_NODE = new CharacterClassNode(new Token(Type.LEFT_BRACKET_CARET, "[^"));
@@ -355,5 +322,17 @@ class ParserImpl implements Parser {
         ANY_NON_WORD_CHARACTER_CLASS_NODE.addChild(upperCaseInterval);
         ANY_NON_WORD_CHARACTER_CLASS_NODE.addChild(digitsInterval);
         ANY_NON_WORD_CHARACTER_CLASS_NODE.addChild(new CharacterNode(new Token(Type.CHARACTER, "_")));
+    }
+
+    private static class ParserException extends Error {
+        public ParserException(String message) {
+            super(message);
+        }
+    }
+
+    private static class UnexpectedTokenException extends ParserException {
+        public UnexpectedTokenException(Token t) {
+            super(String.format("Unexpected token %s", t));
+        }
     }
 }

@@ -17,8 +17,15 @@ public class GroupTest extends MatcherTestCase {
         checkWorkEqually("am", "am|pm");
         checkWorkEqually("pm", "am|pm");
         checkWorkEqually("ss", "am|pm|ss");
-        checkWorkEqually("aba", "(a|b){3}");
+        checkWorkEqually("aba", "(a|b){3}(k|p)?");
         checkWorkEqually("ababa", "(a|b){3,5}");
+        checkWorkEqually("a", "|a");
+        checkWorkEqually("a", "a|");
+        checkWorkEqually("a", "|");
+    }
+
+    public void test() {
+        assertTrue(Matcher.matches("аня", "а.?.?"));
     }
 
 }

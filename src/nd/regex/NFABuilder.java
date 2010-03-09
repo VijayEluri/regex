@@ -23,7 +23,7 @@ class NFABuilder implements ASTNodeVisitor<State> {
                 State f = new EmptyState();
                 f.setFinal(true);
                 childState.patch(f);
-            }                
+            }
         }
         return first;
     }
@@ -31,23 +31,25 @@ class NFABuilder implements ASTNodeVisitor<State> {
     @Override
     public State visit(AlternativeNode alternative) {
         State first = null;
-        for (Iterator<AST> iter = alternative.getFirstAlternative().iterator(); iter.hasNext();) {
-            State childState = iter.next().visit(this);
+        for (AST child : alternative.getFirstAlternative()) {
+            State childState = child.visit(this);
             if (first != null) {
                 first.patch(childState);
             } else {
                 first = childState;
             }
         }
+        if (first == null) first = new EmptyState();
         State second = null;
-        for (Iterator<AST> iter = alternative.getSecondAlternative().iterator(); iter.hasNext();) {
-            State childState = iter.next().visit(this);
+        for (AST child : alternative.getSecondAlternative()) {
+            State childState = child.visit(this);
             if (second != null) {
                 second.patch(childState);
             } else {
                 second = childState;
             }
         }
+        if (second == null) second = new EmptyState();
         return new OrState(first, second);
     }
 

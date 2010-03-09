@@ -96,7 +96,7 @@ final class LexerImpl implements Lexer {
                 case 'W': return new Token(Type.CLASS_NON_WORD_CHARACTER, "W");
                 case 'b': return new Token(Type.WORD_BOUNDARY, "b");
                 case 'B': return new Token(Type.NON_WORD_BOUNDARY, "B");
-                default : throw new LexerException("Unexpected character " + c); 
+                default : throw new LexerException("Unexpected character " + c);
             }
         }
     }
