@@ -7,6 +7,11 @@ import java.util.regex.Pattern;
  */
 public class MiscTest extends MatcherTestCase {
 
+    /**
+     * Compares time of matching pattern of form a?^na^n, where x^n means n times x
+     * (for example a?^2a^2 is a?a?aa) against string a^2n. Regexp engines with backtracking
+     * have problems with such patterns.
+     */
     public void test_pathological_pattern() {
         for (int i = 1; i < 25; i++) {
             String pattern = createPathologicalPattern('a', i);

@@ -6,7 +6,7 @@ import java.util.List;
 /**
  *
  */
-class SequenceNode implements AST {
+final class SequenceNode implements AST {
 
     private final Token token;
     private final List<AST> children = new ArrayList<AST>();

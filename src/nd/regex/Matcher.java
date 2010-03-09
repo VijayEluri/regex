@@ -185,7 +185,7 @@ import static nd.regex.NFA.State;
  *
  * </table>
  */
-public class Matcher {
+public final class Matcher {
 
     private Matcher() {}
 

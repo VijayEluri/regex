@@ -3,7 +3,7 @@ package nd.regex;
 /**
  *
  */
-class BoundedQuantifierNode extends QuantifierNode {
+final class BoundedQuantifierNode extends QuantifierNode {
 
     private final int highBound;
 

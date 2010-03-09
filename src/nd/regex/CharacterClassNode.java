@@ -6,7 +6,7 @@ import java.util.List;
 /**
  *
  */
-class CharacterClassNode implements AST {
+final class CharacterClassNode implements AST {
 
     private final Token token;
     private final List<AST> classElements = new ArrayList<AST>();

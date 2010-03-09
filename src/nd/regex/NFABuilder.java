@@ -7,7 +7,7 @@ import static nd.regex.NFA.*;
 /**
  *
  */
-class NFABuilder implements ASTNodeVisitor<State> {
+final class NFABuilder implements ASTNodeVisitor<State> {
 
     @Override
     public State visit(SequenceNode sequence) {

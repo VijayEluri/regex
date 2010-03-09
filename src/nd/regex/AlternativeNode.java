@@ -6,7 +6,7 @@ import java.util.List;
 /**
  *
  */
-public class AlternativeNode implements AST {
+final class AlternativeNode implements AST {
 
     private final static Token token = new Token(Token.Type.OR, "|");
     private final List<AST> firstAlternative;
@@ -47,6 +47,6 @@ public class AlternativeNode implements AST {
     @Override
     public <E> E visit(ASTNodeVisitor<E> visitor) {
         return visitor.visit(this);
-    }    
+    }
 
 }

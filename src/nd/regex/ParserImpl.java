@@ -9,7 +9,7 @@ import static nd.regex.Token.Type;
 /**
  *
  */
-class ParserImpl implements Parser {
+final class ParserImpl implements Parser {
 
     private final Lexer lexer;
     private final List<Token> tokens = new ArrayList<Token>();
@@ -107,7 +107,7 @@ class ParserImpl implements Parser {
     }
 
     private QuantifierNode parseUserDefinedQuantifier(AST term) {
-        QuantifierNode quantifier = null;
+        QuantifierNode quantifier;
         Token quantifierToken = current;
         match(Type.LEFT_CURLY_BRACKET);
         StringBuilder low = new StringBuilder();

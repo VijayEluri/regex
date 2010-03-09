@@ -3,7 +3,7 @@ package nd.regex;
 /**
  *
  */
-class Token {
+final class Token {
 
     private final Type type;
     private final String text;

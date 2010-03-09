@@ -32,7 +32,7 @@ class NFA {
     }
 
     /**
-     * Base State class, define interface for other states.
+     * Base State class, defines interface for other states.
      */
     abstract static class State {
 
@@ -246,7 +246,7 @@ class NFA {
 
         @Override
         public String toString() {
-            return String.format("(s%d)-(OR %s %s)", id, s1, s2);
+            return String.format("(OR%s %s %s)", id, s1, s2);
         }
 
         @Override
@@ -297,7 +297,7 @@ class NFA {
 
         @Override
         public String toString() {
-            return String.format("(NOT%d %s %s)", id, s, output != null ? output : "null");
+            return String.format("(NOT%d %s %s)", id, s, output != null ? output : "");
         }
     }
 

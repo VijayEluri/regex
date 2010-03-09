@@ -3,7 +3,7 @@ package nd.regex;
 /**
  *
  */
-public interface Parser {
+interface Parser {
 
     AST parse();
 
