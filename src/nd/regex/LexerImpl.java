@@ -20,7 +20,7 @@ final class LexerImpl implements Lexer {
 
     @Override
     public Token nextToken() {
-        while (current != EOF) {
+        if (current != EOF) {
             if (isSpecialCharacter(current)) {
                 return parseSpecialCharacter();
             } else {
@@ -28,8 +28,9 @@ final class LexerImpl implements Lexer {
                 consume();
                 return token;
             }
+        } else {
+            return new Token(Type.EOF, "EOF");            
         }
-        return new Token(Type.EOF, "EOF");
     }
 
 
@@ -52,104 +53,49 @@ final class LexerImpl implements Lexer {
     }
 
     private Token parseSpecialCharacter() {
-        switch (current) {
-            case '[': {
-                consume();
+        char c = current;
+        consume();
+        switch (c) {
+            case '[' :
                 if (current == '^') {
                     consume();
                     return new Token(Type.LEFT_BRACKET_CARET, "[^");
                 } else {
                     return new Token(Type.LEFT_BRACKET, "[");
                 }
-            }
-            case ']': {
-                consume(); return new Token(Type.RIGHT_BRACKET, "]");
-            }
-            case '^': {
-                consume(); return new Token(Type.CARET, "^");
-            }
-            case '$': {
-                consume(); return new Token(Type.DOLLAR, "$");
-            }
-            case '.': {
-                consume();
-                return new Token(Type.CLASS_ANY_CHARACTER, ".");
-            }
-            case '?': {
-                consume();
-                return new Token(Type.ZERO_OR_ONE, "?");
-            }
-            case '*': {
-                consume();
-                return new Token(Type.ZERO_OR_MORE, "*");
-            }
-            case '+': {
-                consume();
-                return new Token(Type.ONE_OR_MORE, "+");
-            }
-            case '-': {
-                consume();
-                return new Token(Type.CHARACTER, "-");
-            }
-            case '\\': {
-                consume();
-                return parseSlashCombination();
-            }
-            case '{': {
-                consume();
-                return new Token(Type.LEFT_CURLY_BRACKET, "{");
-            }
-            case '}': {
-                consume();
-                return new Token(Type.RIGHT_CURLY_BRACKET, "}");
-            }
-            case '(': {
-                consume();
-                return new Token(Type.LEFT_PAREN, "(");
-            }
-            case ')': {
-                consume();
-                return new Token(Type.RIGHT_PAREN, ")");
-            }
-            case '|': {
-                consume();
-                return new Token(Type.OR, "|");
-            }
-            default:
-                throw new Error("Unexpected character " + current);
+            case ']' : return new Token(Type.RIGHT_BRACKET, "]");
+            case '^' : return new Token(Type.CARET, "^");
+            case '$' : return new Token(Type.DOLLAR, "$");
+            case '.' : return new Token(Type.CLASS_ANY_CHARACTER, ".");
+            case '?' : return new Token(Type.ZERO_OR_ONE, "?");
+            case '*' : return new Token(Type.ZERO_OR_MORE, "*");
+            case '+' : return new Token(Type.ONE_OR_MORE, "+");
+            case '-' : return new Token(Type.CHARACTER, "-");
+            case '\\': return parseSlashCombination();
+            case '{' : return new Token(Type.LEFT_CURLY_BRACKET, "{");
+            case '}' : return new Token(Type.RIGHT_CURLY_BRACKET, "}");
+            case '(' : return new Token(Type.LEFT_PAREN, "(");
+            case ')' : return new Token(Type.RIGHT_PAREN, ")");
+            case '|' : return new Token(Type.OR, "|");
+            default  : throw new Error("Unexpected character " + c);
         }
     }
 
     private Token parseSlashCombination() {
-        if (isSpecialCharacter(current)) {
-            Token token = new Token(Type.CHARACTER, String.valueOf(current));
-            consume();
-            return token;
+        char c = current;
+        consume();
+        if (isSpecialCharacter(c)) {
+            return new Token(Type.CHARACTER, String.valueOf(c));
         } else {
-            if (current == 'd') {
-                consume();
-                return new Token(Type.CLASS_DIGIT, "d");
-            } else if (current == 'D') {
-                consume();
-                return new Token(Type.CLASS_NON_DIGIT, "D");
-            } else if (current == 's') {
-                consume();
-                return new Token(Type.CLASS_WHITESPACE, "s");
-            } else if (current == 'S') {
-                consume();
-                return new Token(Type.CLASS_NON_WHITESPACE, "S");
-            } else if (current == 'w') {
-                consume();
-                return new Token(Type.CLASS_WORD_CHARACTER, "w");
-            } else if (current == 'W') {
-                consume();
-                return new Token(Type.CLASS_NON_WORD_CHARACTER, "W");
-            } else if (current == 'b') {
-                consume();
-                return new Token(Type.WORD_BOUNDARY, "b");
-            } else if (current == 'B') {
-                consume();
-                return new Token(Type.NON_WORD_BOUNDARY, "B");
+            switch (c) {
+                case 'd': return new Token(Type.CLASS_DIGIT, "d");
+                case 'D': return new Token(Type.CLASS_NON_DIGIT, "D");
+                case 's': return new Token(Type.CLASS_WHITESPACE, "s");
+                case 'S': return new Token(Type.CLASS_NON_WHITESPACE, "S");
+                case 'w': return new Token(Type.CLASS_WORD_CHARACTER, "w");
+                case 'W': return new Token(Type.CLASS_NON_WORD_CHARACTER, "W");
+                case 'b': return new Token(Type.WORD_BOUNDARY, "b");
+                case 'B': return new Token(Type.NON_WORD_BOUNDARY, "B");
             }
             throw new RuntimeException("Unexpected character " + current);
         }
