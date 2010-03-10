@@ -3,7 +3,7 @@ package nd.regex;
 /**
  *
  */
-public interface ASTNodeVisitor<E> {
+public interface ASTVisitor<E> {
 
     E visit(SequenceNode sequence);
 

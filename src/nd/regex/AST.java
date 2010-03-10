@@ -3,7 +3,7 @@ package nd.regex;
 import java.util.List;
 
 /**
- *
+ * Abstract syntax tree.
  */
 interface AST {
 
@@ -15,5 +15,5 @@ interface AST {
 
     AST removeLastChild();
 
-    <E> E visit(ASTNodeVisitor<E> visitor);
+    <E> E visit(ASTVisitor<E> visitor);
 }

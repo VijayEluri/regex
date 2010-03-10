@@ -10,7 +10,7 @@ final class UnboundedQuantifierNode extends QuantifierNode {
     }
 
     @Override
-    public <E> E visit(ASTNodeVisitor<E> visitor) {
+    public <E> E visit(ASTVisitor<E> visitor) {
         return visitor.visit(this);
     }
 }

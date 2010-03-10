@@ -51,7 +51,7 @@ class CharacterClassIntervalNode implements AST {
     }
 
     @Override
-    public <E> E visit(ASTNodeVisitor<E> visitor) {
+    public <E> E visit(ASTVisitor<E> visitor) {
         return visitor.visit(this);
     }
 }
