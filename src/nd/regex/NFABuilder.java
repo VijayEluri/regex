@@ -5,7 +5,8 @@ import java.util.Iterator;
 import static nd.regex.NFA.*;
 
 /**
- *
+ * NFA builder.
+ * Build NFA from AST.
  */
 final class NFABuilder implements ASTVisitor<State> {
 

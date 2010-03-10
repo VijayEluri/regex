@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- *
+ * AST node for alternative (|)
  */
 final class AlternativeNode implements AST {
 
