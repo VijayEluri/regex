@@ -100,7 +100,7 @@ import static nd.regex.NFA.State;
  * <tr align="left"><th colspan="2" id="predef">Predefined character classes</th></tr>
  *
  * <tr><td valign="top" headers="construct predef"><tt>.</tt></td>
- *     <td headers="matches">Any character (match <a href="#lt">line terminators</a>)</td>
+ *     <td headers="matches">Any character (match line terminators)</td>
  *     <td headers="matches">+</td></tr>
  * <tr><td valign="top" headers="construct predef"><tt>\d</tt></td>
  *     <td headers="matches">A digit: <tt>[0-9]</tt></td>
@@ -122,16 +122,16 @@ import static nd.regex.NFA.State;
  *     <td headers="matches">+</td></tr>
  *
  * <tr><th>&nbsp;</th></tr>
- * <tr align="left"><th colspan="3" id="posix">POSIX character classes</b> - not supported<b></th></tr>
+ * <tr align="left"><th colspan="3" id="posix">POSIX character classes</b> - not supported yet<b></th></tr>
  *
  * <tr><th>&nbsp;</th></tr>
- * <tr align="left"><th colspan="3">java.lang.Character classes - not supported</th></tr>
+ * <tr align="left"><th colspan="3">java.lang.Character classes - not supported yet</th></tr>
  *
  * <tr><th>&nbsp;</th></tr>
- * <tr align="left"><th colspan="3" id="unicode">Classes for Unicode blocks and categories - not supported</th></tr>
+ * <tr align="left"><th colspan="3" id="unicode">Classes for Unicode blocks and categories - not supported yet</th></tr>
  *
  * <tr><th>&nbsp;</th></tr>
- * <tr align="left"><th colspan="3" id="bounds">Boundary matchers - not supported</th></tr>
+ * <tr align="left"><th colspan="3" id="bounds">Boundary matchers - not supported yet</th></tr>
 
  * <tr><th>&nbsp;</th></tr>
  * <tr align="left"><th colspan="2" id="greedy">Greedy quantifiers</th></tr>
@@ -156,10 +156,10 @@ import static nd.regex.NFA.State;
  *     <td headers="matches">+</td></tr></tr>
  *
  * <tr><th>&nbsp;</th></tr>
- * <tr align="left"><th colspan="3" id="reluc">Reluctant quantifiers - not supported</th></tr>
+ * <tr align="left"><th colspan="3" id="reluc">Reluctant quantifiers - not supported yet</th></tr>
  *
  * <tr><th>&nbsp;</th></tr>
- * <tr align="left"><th colspan="3" id="poss">Possessive quantifiers - not supported</th></tr>
+ * <tr align="left"><th colspan="3" id="poss">Possessive quantifiers - not supported yet</th></tr>
  *
  * <tr><th>&nbsp;</th></tr>
  * <tr align="left"><th colspan="3" id="logical">Logical operators</th></tr>
@@ -171,19 +171,25 @@ import static nd.regex.NFA.State;
  *     <td headers="matches">Either <i>X</i> or <i>Y</i></td>
  *     <td headers="matches">+</td></tr></tr>
  * <tr><td valign="top" headers="construct logical"><tt>(</tt><i>X</i><tt>)</tt></td>
- *     <td headers="matches">X, as a <a href="#cg">capturing group</a></td>
- *     <td headers="matches">+</td></tr></tr>
+ *     <td headers="matches">X, as a capturing group</td>
+ *     <td headers="matches"><a href="groups">!</a></td></tr></tr>
  *
  * <tr><th>&nbsp;</th></tr>
  * <tr align="left"><th colspan="3" id="backref">Back references - not supported</th></tr>
  *
  * <tr><th>&nbsp;</th></tr>
- * <tr align="left"><th colspan="3" id="quot">Quotation - not supported</th></tr>
+ * <tr align="left"><th colspan="3" id="quot">Quotation - not supported yet</th></tr>
  *
  * <tr><th>&nbsp;</th></tr>
- * <tr align="left"><th colspan="2" id="special">Special constructs (non-capturing) - not supported</th></tr>
+ * <tr align="left"><th colspan="2" id="special">Special constructs (non-capturing) - not supported yet</th></tr>
  *
  * </table>
+ *
+ * <a name="groups">
+ * <h4> Groups and capturing </h4>
+ * Groups are supported, but they are non-capturing. You can not reference to group with number or name.
+ * In {@link java.util.regex.Pattern} non-capturing groups have syntax (?:X), but since capturing groups
+ * are not supported, we use shorter capturing-group syntax for them - (X).
  */
 public final class Matcher {
 
