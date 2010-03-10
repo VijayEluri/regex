@@ -219,6 +219,14 @@ final class ParserImpl implements Parser {
                     break;
                 case EOF:
                     throw new UnexpectedTokenException(current);
+                case CLASS_DIGIT:
+                case CLASS_NON_DIGIT:
+                case CLASS_WHITESPACE:
+                case CLASS_NON_WHITESPACE:
+                case CLASS_WORD_CHARACTER:
+                case CLASS_NON_WORD_CHARACTER:
+                    parsePredefinedCharacterClass(charClass);
+                    break;
                 default:
                     charClass.addChild(new CharacterNode(new Token(Type.CHARACTER, String.valueOf(current.text()))));
                     match(current.type());

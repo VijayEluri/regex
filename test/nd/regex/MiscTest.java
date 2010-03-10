@@ -13,7 +13,7 @@ public class MiscTest extends MatcherTestCase {
      * have problems with such patterns.
      */
     public void test_pathological_pattern() {
-        for (int i = 1; i < 25; i++) {
+        for (int i = 1; i < 10; i++) {
             String pattern = createPathologicalPattern('a', i);
             String str = createStringToMatch('a', i);
 

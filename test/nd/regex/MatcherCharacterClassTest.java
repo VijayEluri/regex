@@ -67,6 +67,13 @@ public class MatcherCharacterClassTest extends MatcherTestCase {
         checkWorkEqually("-",  "[\\-]");
         checkWorkEqually("$",  "[\\$]");
         checkWorkEqually("-",  "[-]");
+        checkWorkEqually("2",  "[\\d]");
+        checkWorkEqually("2",  "[\\D]");
+        checkWorkEqually("2",  "[\\w]");
+        checkWorkEqually("2",  "[\\W]");
+        checkWorkEqually(" ",  "[\\s]");
+        checkWorkEqually(" ",  "[\\S]");
+        checkWorkEqually("a2", "[abc\\d]*");        
     }
 
 
