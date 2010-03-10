@@ -15,7 +15,11 @@ final class LexerImpl implements Lexer {
 
     LexerImpl(String pattern) {
         this.pattern = pattern;
-        this.current = pattern.charAt(0);
+        if (pattern.length() > 0) {
+            this.current = pattern.charAt(0);
+        } else {
+            this.current = EOF;
+        }
     }
 
     @Override

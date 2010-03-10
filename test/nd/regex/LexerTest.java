@@ -62,4 +62,8 @@ public class LexerTest extends TestCase {
         assertEquals(new Token(Type.ZERO_OR_MORE, "*"), lexer.nextToken());
         assertEquals(new Token(Type.ONE_OR_MORE, "+"), lexer.nextToken());
     }
+
+    public void test_empty() {
+        new LexerImpl("");
+    }
 }
