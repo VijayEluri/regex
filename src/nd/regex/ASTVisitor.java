@@ -1,7 +1,7 @@
 package nd.regex;
 
 /**
- *
+ * AST visitor
  */
 public interface ASTVisitor<E> {
 

@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- *
+ * AST node for interval in character class
  */
 class CharacterClassIntervalNode implements AST {
 

@@ -1,7 +1,7 @@
 package nd.regex;
 
 /**
- *
+ * AST node for bounded quantifiers (ex: ?, {1}, {5,7}}
  */
 final class BoundedQuantifierNode extends QuantifierNode {
 

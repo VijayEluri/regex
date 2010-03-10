@@ -4,7 +4,7 @@ import java.util.Collections;
 import java.util.List;
 
 /**
- *
+ * Base AST node for quantifiers
  */
 abstract class QuantifierNode implements AST {
 

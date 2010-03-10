@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- *
+ * AST node for sequence of characters
  */
 final class SequenceNode implements AST {
 

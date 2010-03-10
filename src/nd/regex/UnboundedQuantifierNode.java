@@ -1,7 +1,7 @@
 package nd.regex;
 
 /**
- *
+ * AST node for unbounded quantifier (ex: *, +, {1, }})
  */
 final class UnboundedQuantifierNode extends QuantifierNode {
 
