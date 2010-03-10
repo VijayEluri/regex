@@ -119,6 +119,7 @@ class NFA {
 
         @Override
         void patch(State s) {
+            if (output == s) return;
             if (output == null) {
                 output = s;
             } else {
@@ -157,6 +158,7 @@ class NFA {
 
         @Override
         void patch(State s) {
+            if (output == s) return;
             if (output == null) {
                 output = s;
             } else {
@@ -199,6 +201,7 @@ class NFA {
 
         @Override
         void patch(State s) {
+            if (output == s) return;
             if (output == null) {
                 output = s;
             } else {
@@ -241,7 +244,7 @@ class NFA {
         @Override
         void patch(State s) {
             s1.patch(s);
-            s2.patch(new Unpatchable(s));
+            s2.patch(s);
         }
 
         @Override
@@ -288,6 +291,7 @@ class NFA {
 
         @Override
         void patch(State s) {
+            if (output == s) return;
             if (output == null) {
                 output = s;
             } else {
@@ -318,7 +322,12 @@ class NFA {
 
         @Override
         void patch(State s) {
-            output = s;
+            if (output == s) return;
+            if (output == null) {
+                output = s;
+            } else {
+                output.patch(s);
+            }
         }
 
         @Override

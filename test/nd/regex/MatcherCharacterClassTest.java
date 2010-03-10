@@ -10,6 +10,7 @@ public class MatcherCharacterClassTest extends MatcherTestCase {
         checkWorkEqually("abc", "[abc][abc][abc]");
         checkWorkEqually("abc", "[ab][bc][ac]");
         checkWorkEqually("ad",  "[ab][ab]");
+        checkWorkEqually("12ab", "[^abc]*ab[xyz]?");
     }
 
 
@@ -73,7 +74,7 @@ public class MatcherCharacterClassTest extends MatcherTestCase {
         checkWorkEqually("2",  "[\\W]");
         checkWorkEqually(" ",  "[\\s]");
         checkWorkEqually(" ",  "[\\S]");
-        checkWorkEqually("a2", "[abc\\d]*");        
+        checkWorkEqually("a2", "[abc\\d]*");
     }
 
 

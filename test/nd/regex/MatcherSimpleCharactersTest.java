@@ -8,6 +8,8 @@ public class MatcherSimpleCharactersTest extends MatcherTestCase {
     public void test_characters() {
         checkWorkEqually("abc", "abc");
         checkWorkEqually("abc", "b");
+        checkWorkEqually("a","");
+        checkWorkEqually("","");
     }
 
     public void test_escaped_characters() {
@@ -16,7 +18,7 @@ public class MatcherSimpleCharactersTest extends MatcherTestCase {
         checkWorkEqually("(){}[]", "\\(\\)\\{\\}\\[\\]");
         checkWorkEqually("[a]",    "\\[a\\]");
         checkWorkEqually("[a]",    "[a]");
-        checkWorkEqually("-",      "\\-");        
+        checkWorkEqually("-",      "\\-");
     }
 
 }

@@ -26,6 +26,11 @@ final class NFABuilder implements ASTVisitor<State> {
                 childState.patch(f);
             }
         }
+        //empty pattern always match
+        if (first == null) {
+            first = new EmptyState();
+            first.setFinal(true);
+        }
         return first;
     }
 
@@ -88,11 +93,13 @@ final class NFABuilder implements ASTVisitor<State> {
         }
         if (first == null) {
             first = quantifier.term().visit(this);
-            State or = new OrState(new Unpatchable(first), new EmptyState());
-            first.patch(or);
+            State or = new OrState(first, new EmptyState());
+            first.patch(new Unpatchable(or));
             first = or;
         } else {
-            State or = new OrState(new Unpatchable(first), new EmptyState());
+            State last = quantifier.term().visit(this);
+            State or = new OrState(last, new EmptyState());
+            last.patch(new Unpatchable(or));
             first.patch(or);
         }
         return first;
