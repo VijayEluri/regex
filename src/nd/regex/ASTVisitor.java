@@ -18,4 +18,6 @@ public interface ASTVisitor<E> {
     E visit(CharacterNode character);
 
     E visit(AlternativeNode alternative);
+
+    E visit(AnchorNode anchor);
 }

@@ -33,6 +33,10 @@ final class ParserImpl implements Parser {
 
     private void parse(AST currentRoot, Token token) {
         switch (token.type()) {
+            case CARET:
+            case DOLLAR:
+                parseAnchor(currentRoot);
+                break;
             case ZERO_OR_ONE:
             case ZERO_OR_MORE:
             case ONE_OR_MORE:
@@ -69,6 +73,12 @@ final class ParserImpl implements Parser {
     private void parseCharacter(AST currentRoot) {
         currentRoot.addChild(new CharacterNode(current));
         match(Type.CHARACTER);
+    }
+
+    private void parseAnchor(AST currentRoot) {
+        AnchorNode a = new AnchorNode(current);
+        match(current.type());
+        currentRoot.addChild(a);
     }
 
     private void parseQuantifier(AST currentRoot) {

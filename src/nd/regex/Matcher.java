@@ -131,8 +131,34 @@ import static nd.regex.NFA.State;
  * <tr align="left"><th colspan="3" id="unicode">Classes for Unicode blocks and categories - not supported yet</th></tr>
  *
  * <tr><th>&nbsp;</th></tr>
- * <tr align="left"><th colspan="3" id="bounds">Boundary matchers - not supported yet</th></tr>
-
+ * <tr align="left"><th colspan="2" id="bounds">Boundary matchers</th></tr>
+ *
+ * <tr><td valign="top" headers="construct bounds"><tt>^</tt></td>
+ *     <td headers="matches">The beginning of a line</td>
+ *     <td headers="matches">+</td></tr>
+ * <tr><td valign="top" headers="construct bounds"><tt>$</tt></td>
+ *     <td headers="matches">The end of a line</td>
+ *     <td headers="matches">+</td></tr>
+ * <tr><td valign="top" headers="construct bounds"><tt>\b</tt></td>
+ *     <td headers="matches">A word boundary</td>
+ *     <td headers="matches">-</td></tr>
+ * <tr><td valign="top" headers="construct bounds"><tt>\B</tt></td>
+ *     <td headers="matches">A non-word boundary</td>
+ *     <td headers="matches">-</td></tr>
+ * <tr><td valign="top" headers="construct bounds"><tt>\A</tt></td>
+ *     <td headers="matches">The beginning of the input</td>
+ *     <td headers="matches">-</td></tr>
+ * <tr><td valign="top" headers="construct bounds"><tt>\G</tt></td>
+ *     <td headers="matches">The end of the previous match</td>
+ *     <td headers="matches">-</td></tr>
+ * <tr><td valign="top" headers="construct bounds"><tt>\Z</tt></td>
+ *     <td headers="matches">The end of the input but for the final
+ *         <a href="#lt">terminator</a>, if&nbsp;any</td>
+ *     <td headers="matches">-</td></tr>
+ * <tr><td valign="top" headers="construct bounds"><tt>\z</tt></td>
+ *     <td headers="matches">The end of the input</td>
+ *     <td headers="matches">-</td></tr>
+ *
  * <tr><th>&nbsp;</th></tr>
  * <tr align="left"><th colspan="2" id="greedy">Greedy quantifiers</th></tr>
  *
@@ -204,6 +230,8 @@ public final class Matcher {
      * @throws ParserImpl.ParserException if there are error in the syntax of pattern
      */
     public static boolean matches(String str, String pattern) {
+        if (str == null || pattern == null) throw new IllegalArgumentException(String
+                .format("str = %s, pattern = %s", str, pattern));
         Parser parser = new ParserImpl(new LexerImpl(pattern));
         AST ast = parser.parse();
         State first = ast.visit(new NFABuilder());

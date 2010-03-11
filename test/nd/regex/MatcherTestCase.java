@@ -10,12 +10,16 @@ import java.util.regex.Pattern;
 abstract public class MatcherTestCase extends TestCase {
 
     protected void checkWorkEqually(String str, String pattern) {
+        checkWorkEqually(str, pattern, 0);
+    }
+
+    protected void checkWorkEqually(String str, String pattern, int buildInRegexpFlags) {
         boolean buildInResult = false;
         boolean buildIndExceptionsThrown = false;
         boolean result = false;
         boolean exceptionThrown = false;
         try {
-            buildInResult = Pattern.compile(pattern).matcher(str).matches();
+            buildInResult = Pattern.compile(pattern, buildInRegexpFlags).matcher(str).matches();
         } catch (Throwable t) {
             buildIndExceptionsThrown = true;
         }

@@ -18,10 +18,12 @@ class NFA {
         Set<State> current = new HashSet<State>();
         current.add(firstState);
         for (int i = 0; i < str.length(); i++) {
+            char prevChar = i == 0 ? 0 : str.charAt(i - 1);
+            char nextChar = i + 1 >= str.length() ? 0 : str.charAt(i + 1);
             Character c = str.charAt(i);
             Set<State> next = new HashSet<State>();
             for (State state : current) {
-                next.addAll(state.step(c));
+                next.addAll(state.step(prevChar, c, nextChar));
             }
             current = next;
         }
@@ -45,18 +47,22 @@ class NFA {
         }
 
         /**
-         * Step through state with character c
-         * @param c input character for state
-         * @return list of states to match for next character
+         * Step through state
+         * @param prev previous character
+         * @param cur current character
+         * @param next next character
+         * @return list of next states to match
          */
-        abstract List<State> step(Character c);
+        abstract List<State> step(Character prev, Character cur, Character next);
 
         /**
-         * Check if state match character
-         * @param c character to check
-         * @return true if state match character, false otherwise
+         * Check if this state matches previous, current and next characters
+         * @param prev previous character
+         * @param cur current character
+         * @param next next character
+         * @return true if matches, false otherwise
          */
-        abstract boolean match(Character c);
+        abstract boolean match(Character prev, Character cur, Character next);
 
         /**
          * Link state with next state
@@ -104,17 +110,17 @@ class NFA {
         }
 
         @Override
-        List<State> step(Character c) {
+        List<State> step(Character prev, Character cur, Character next) {
             if (output != null) {
-                return match(c) ? Collections.singletonList(output) : Collections.<State>emptyList();
+                return match(prev, cur, next) ? Collections.singletonList(output) : Collections.<State>emptyList();
             } else {
                 return Collections.emptyList();
             }
         }
 
         @Override
-        boolean match(Character c) {
-            return this.c.equals(c);
+        boolean match(Character prev, Character cur, Character next) {
+            return this.c.equals(cur);
         }
 
         @Override
@@ -143,7 +149,7 @@ class NFA {
         }
 
         @Override
-        List<State> step(Character c) {
+        List<State> step(Character prev, Character cur, Character next) {
             if (output != null) {
                 return Collections.singletonList(output);
             } else {
@@ -152,7 +158,7 @@ class NFA {
         }
 
         @Override
-        boolean match(Character c) {
+        boolean match(Character prev, Character cur, Character next) {
             return true;
         }
 
@@ -186,17 +192,17 @@ class NFA {
         }
 
         @Override
-        List<State> step(Character c) {
+        List<State> step(Character prev, Character cur, Character next) {
             if (output != null) {
-                return match(c) ? Collections.singletonList(output) : Collections.<State>emptyList();
+                return match(prev, cur, next) ? Collections.singletonList(output) : Collections.<State>emptyList();
             } else {
                 return Collections.emptyList();
             }
         }
 
         @Override
-        boolean match(Character c) {
-            return c >= lowBound && c <= highBound;
+        boolean match(Character prev, Character cur, Character next) {
+            return cur >= lowBound && cur <= highBound;
         }
 
         @Override
@@ -229,16 +235,16 @@ class NFA {
         }
 
         @Override
-        List<State> step(Character c) {
+        List<State> step(Character prev, Character cur, Character next) {
             List<State> result = new ArrayList<State>();
-            result.addAll(s1.step(c));
-            result.addAll(s2.step(c));
+            result.addAll(s1.step(prev, cur, next));
+            result.addAll(s2.step(prev, cur, next));
             return result;
         }
 
         @Override
-        boolean match(Character c) {
-            return s1.match(c) || s2.match(c);
+        boolean match(Character prev, Character cur, Character next) {
+            return s1.match(prev, cur, next) || s2.match(prev, cur, next);
         }
 
         @Override
@@ -276,8 +282,8 @@ class NFA {
         }
 
         @Override
-        List<State> step(Character c) {
-            if (output != null && match(c)) {
+        List<State> step(Character prev, Character cur, Character next) {
+            if (output != null && match(prev, cur, next)) {
                 return Collections.singletonList(output);
             } else {
                 return Collections.emptyList();
@@ -285,8 +291,8 @@ class NFA {
         }
 
         @Override
-        boolean match(Character c) {
-            return !s.match(c);
+        boolean match(Character prev, Character cur, Character next) {
+            return !s.match(prev, cur, next);
         }
 
         @Override
@@ -309,12 +315,12 @@ class NFA {
      * State that always matches
      */
     static class EmptyState extends State {
-        private State output;
+        protected State output;
 
         @Override
-        List<State> step(Character c) {
-            if (output != null) {
-                return output.step(c);
+        List<State> step(Character prev, Character cur, Character next) {
+            if (output != null && match(prev, cur, next)) {
+                return output.step(prev, cur, next);
             } else {
                 return Collections.emptyList();
             }
@@ -331,7 +337,7 @@ class NFA {
         }
 
         @Override
-        boolean match(Character c) {
+        boolean match(Character prev, Character cur, Character next) {
             return true;
         }
 
@@ -353,6 +359,36 @@ class NFA {
     }
 
     /**
+     * State for start of the line. Matches only if previous character is 0
+     */
+    static class LineStartState extends EmptyState {
+        @Override
+        boolean match(Character prev, Character cur, Character next) {
+            return (prev == 0) && output.match(prev, cur, next);
+        }
+
+        @Override
+        public String toString() {
+            return String.format("(s%d)^-> %s)", id, output);
+        }
+    }
+
+    /**
+     * State for line end. Never matches, so any pattern with $ in the middle always fails.
+     */
+    static class LineEndState extends EmptyState {
+        @Override
+        boolean match(Character prev, Character cur, Character next) {
+            return false;
+        }
+
+        @Override
+        public String toString() {
+            return String.format("(s%d)->$ %s)", id, output);
+        }
+    }
+
+    /**
      * Wrapper over other state, protects wrapped state from patching with itself
      */
     static class Unpatchable extends State {
@@ -361,16 +397,16 @@ class NFA {
             this.s = s;
         }
         @Override
-        List<State> step(Character c) {
-            return s.step(c);
+        List<State> step(Character prev, Character cur, Character next) {
+            return s.step(prev, cur, next);
         }
         @Override
         void patch(State s) {
             //ignore
         }
         @Override
-        boolean match(Character c) {
-            return s.match(c);
+        boolean match(Character prev, Character cur, Character next) {
+            return s.match(prev, cur, next);
         }
         @Override
         public String toString() {

@@ -91,15 +91,13 @@ final class NFABuilder implements ASTVisitor<State> {
                 first.patch(s);
             }
         }
+
+        State last = quantifier.term().visit(this);
+        State or = new OrState(last, new EmptyState());
+        last.patch(new Unpatchable(or));
         if (first == null) {
-            first = quantifier.term().visit(this);
-            State or = new OrState(first, new EmptyState());
-            first.patch(new Unpatchable(or));
             first = or;
         } else {
-            State last = quantifier.term().visit(this);
-            State or = new OrState(last, new EmptyState());
-            last.patch(new Unpatchable(or));
             first.patch(or);
         }
         return first;
@@ -137,5 +135,14 @@ final class NFABuilder implements ASTVisitor<State> {
     @Override
     public State visit(CharacterNode character) {
         return new CharacterState(character.token().text().charAt(0));
+    }
+
+    @Override
+    public State visit(AnchorNode anchor) {
+        switch (anchor.token().type()) {
+            case CARET:  return new LineStartState();
+            case DOLLAR: return new LineEndState();
+            default: throw new Error("Unexpected token");
+        }
     }
 }
