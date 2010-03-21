@@ -16,7 +16,7 @@ public class MatcherCharacterClassTest extends MatcherTestCase {
 
     public void test_user_defined_char_class_with_interval() {
         checkWorkEqually("abc", "[a-c][-a-c][a-c]");
-        checkWorkEqually("abâ", "[ab][a-c]â");
+        checkWorkEqually("aba", "[ab][a-c]a");
         checkWorkEqually("abc", "a[a-z][c]");
         checkWorkEqually("-ab", "[-]a[a-z]");
         checkWorkEqually("a-b", "a[a-b]b");

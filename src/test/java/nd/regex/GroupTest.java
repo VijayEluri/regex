@@ -25,7 +25,7 @@ public class GroupTest extends MatcherTestCase {
     }
 
     public void test() {
-        assertTrue(Matcher.matches("аня", "а.?.?"));
+        assertTrue(Matcher.matches("abc", "a.?.?"));
     }
 
 }
